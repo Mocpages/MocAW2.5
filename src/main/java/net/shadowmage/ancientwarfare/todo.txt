@@ -1,0 +1,19 @@
+
+
+colors for textures:
+wood: d5bf82
+iron: e3e6e6 (180/5/60 recolor from wood)
+steel: d7e4e4 (180/20/50 recolor from wood)
+gearhead: 535353
+
+Towns:	
+	Possibly look into deferring leveling and border operations on a per-chunk basis
+	Possibly look into adding a density setting to lower generation frequency as distance from center increases
+		
+//https://raw.githubusercontent.com/coolAlias/Forge_Tutorials/master/ModdingWithAPIs.java
+	
+video links
+http://youtu.be/0SCxAk2o3co
+<iframe width="560" height="315" src="//www.youtube.com/embed/0SCxAk2o3co" frameborder="0" allowfullscreen></iframe>
+http://youtu.be/-w2A8EUVBZk
+<iframe width="560" height="315" src="//www.youtube.com/embed/-w2A8EUVBZk?list=UU0KIRvhgKvhOKyv1cghdpWQ" frameborder="0" allowfullscreen></iframe>
