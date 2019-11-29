@@ -20,6 +20,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.command.IEntitySelector;
 import net.minecraft.entity.Entity;
 
+import tradebooth.tileentity.TileEntityTradeBoothTop;
+
 public class NpcAIPlayerOwnedGetFood extends NpcAI
 {
 IEntitySelector selector;
@@ -74,14 +76,36 @@ public void startExecuting()
 /**
  * Updates the task
  */
+
+/*
+ * //Minecraft.getMinecraft().thePlayer.sendChatMessage("test"); double dist =
+ * 50; AxisAlignedBB bb = npc.boundingBox.expand(dist, dist/2, dist);
+ * List<NpcTrader> traderList =
+ * npc.worldObj.selectEntitiesWithinAABB(NpcTrader.class, bb, selector);
+ * ((NpcPlayerOwned)npc).withdrawFood(traderList);
+ */	//tryUpkeep(traderList);
 @Override
 public void updateTask(){
-	//Minecraft.getMinecraft().thePlayer.sendChatMessage("test");
-	double dist = 50;
-	AxisAlignedBB bb = npc.boundingBox.expand(dist, dist/2, dist);
-	List<NpcTrader> traderList = npc.worldObj.selectEntitiesWithinAABB(NpcTrader.class, bb, selector);
-	((NpcPlayerOwned)npc).withdrawFood(traderList);
-	//tryUpkeep(traderList);
+	BlockPosition pos = npc.getUpkeepPoint();
+	if(pos==null){return;}
+	double dist = npc.getDistanceSq(pos.x+0.5d, pos.y, pos.z+0.5d);
+	if(dist>5.d*5.d){
+		npc.addAITask(TASK_MOVE);
+		moveToPosition(pos, dist);
+	}else{
+	    npc.removeAITask(TASK_MOVE);
+	    tryUpkeep(pos);
+	}
+}
+
+protected void tryUpkeep(BlockPosition pos)
+{
+TileEntity te = npc.worldObj.getTileEntity(pos.x, pos.y, pos.z);
+int side = npc.getUpkeepBlockSide();
+if(te instanceof TileEntityTradeBoothTop)
+  {
+  ((NpcPlayerOwned)npc).withdrawFood((TileEntityTradeBoothTop) te, side);
+  }
 }
 
 /**

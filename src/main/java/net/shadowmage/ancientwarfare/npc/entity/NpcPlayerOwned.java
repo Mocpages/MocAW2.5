@@ -1,43 +1,26 @@
 package net.shadowmage.ancientwarfare.npc.entity;
 
 import java.util.List;
-import java.util.*; 
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
-import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.ai.EntityAIOpenDoor;
-import net.minecraft.entity.ai.EntityAIRestrictOpenDoor;
-import net.minecraft.entity.ai.EntityAISwimming;
-import net.minecraft.entity.ai.EntityAIWatchClosest;
-import net.minecraft.entity.ai.EntityAIWatchClosest2;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.scoreboard.Team;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.shadowmage.ancientwarfare.core.config.AWLog;
-import net.shadowmage.ancientwarfare.core.inventory.InventoryBackpack;
-import net.shadowmage.ancientwarfare.core.item.ItemBackpack;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
 import net.shadowmage.ancientwarfare.npc.AncientWarfareNPC;
-import net.shadowmage.ancientwarfare.npc.ai.NpcAIFleeHostiles;
-import net.shadowmage.ancientwarfare.npc.ai.NpcAIFollowPlayer;
-import net.shadowmage.ancientwarfare.npc.ai.NpcAIMoveHome;
-import net.shadowmage.ancientwarfare.npc.ai.NpcAIWander;
-import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedFollowCommand;
-import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedGetFood;
-import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedIdleWhenHungry;
 import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedRideHorse;
-import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedTrader;
 import net.shadowmage.ancientwarfare.npc.config.AWNPCStatics;
 import net.shadowmage.ancientwarfare.npc.entity.faction.NpcFaction;
 import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
@@ -45,19 +28,16 @@ import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.Command;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.CommandType;
 import net.shadowmage.ancientwarfare.npc.orders.UpkeepOrder;
 import net.shadowmage.ancientwarfare.npc.tile.TileTownHall;
-import net.shadowmage.ancientwarfare.npc.trade.POTrade;
-import net.shadowmage.ancientwarfare.npc.trade.POTradeList;
-
-import net.shadowmage.ancientwarfare.npc.container.ContainerNpcPlayerOwnedTrade;
-import net.shadowmage.ancientwarfare.npc.entity.NpcTrader;
-import net.minecraft.item.Item;
-import net.shadowmage.ancientwarfare.core.util.InventoryTools;
+import tradebooth.container.ContainerTradeBoothTopNonOwner;
+import tradebooth.tileentity.TileEntityTradeBoothStorage;
+import tradebooth.tileentity.TileEntityTradeBoothTop;
 
 public abstract class NpcPlayerOwned extends NpcBase
 {
 
 private Command playerIssuedCommand;//TODO load/save
 private int foodValueRemaining = 0;
+private int cash = 1000;
 
 protected NpcAIPlayerOwnedRideHorse horseAI;
 
@@ -67,24 +47,6 @@ private BlockPosition upkeepAutoBlock;
 public NpcPlayerOwned(World par1World)
   {
   super(par1World);
-  
-
-  this.tasks.addTask(0, new EntityAISwimming(this));
-  this.tasks.addTask(0, new EntityAIRestrictOpenDoor(this));
-  this.tasks.addTask(0, new EntityAIOpenDoor(this, true));
-  this.tasks.addTask(0, (horseAI=new NpcAIPlayerOwnedRideHorse(this)));
-  this.tasks.addTask(2, new NpcAIFollowPlayer(this));
-  this.tasks.addTask(2, new NpcAIPlayerOwnedFollowCommand(this));
-  this.tasks.addTask(3, new NpcAIFleeHostiles(this));
-  this.tasks.addTask(5, new NpcAIPlayerOwnedGetFood(this));  
-  this.tasks.addTask(6, new NpcAIPlayerOwnedIdleWhenHungry(this)); 
-  this.tasks.addTask(7, new NpcAIMoveHome(this, 50.f, 3.f, 30.f, 3.f));
-  
-  //post-100 -- used by delayed shared tasks (look at random stuff, wander)
-  this.tasks.addTask(101, new EntityAIWatchClosest2(this, EntityPlayer.class, 3.0F, 1.0F));
-  this.tasks.addTask(102, new NpcAIWander(this, 0.625D));
-  this.tasks.addTask(103, new EntityAIWatchClosest(this, EntityLiving.class, 8.0F));
-  
   }
 
 @Override
@@ -414,91 +376,51 @@ protected boolean interact(EntityPlayer player)
   return true;
   }
 
-/*
- * POTrade cheapest = null;
-	NpcTrader cheapest_trader;
-	int goldSumCheapest = Integer.MAX_VALUE;
-	int amount = getUpkeepAmount() - getFoodRemaining();
-	if(amount<=0){return true;}
-	
-	
-	for(NpcTrader trader : traderList) {
-		
-		POTradeList list_trades = trader.getTradeList();
-		List<POTrade> tradeList = new ArrayList<POTrade>();
-		list_trades.getTrades(tradeList);
-		List<POTrade> foodTrades = new ArrayList<POTrade>();
-		
-		for(POTrade trade : tradeList) {
-			boolean hasFood = false;
-			for(int i = 0; i<9; i++) {
-				ItemStack stack = trade.getInputStack(i);
-				if(AncientWarfareNPC.statics.getFoodValue(stack) > 0) {
-					hasFood = true;
-				}
-			}
-			if(hasFood) {
-				foodTrades.add(trade);
-			}
-		}
-		
-		int goldSum;
-		for(POTrade trade : foodTrades){
-			goldSum = 0;
-			for(int i = 0; i<9; i++) {
-				ItemStack stack = trade.getInputStack(i);
-				if(stack==null) {continue;}
-				if(Item.getIdFromItem(stack.getItem())==266) {
-					goldSum += stack.stackSize;
-				}
-				
-			}
-			
-			if(goldSum < goldSumCheapest) {
-				goldSumCheapest = goldSum;
-				cheapest = trade;
-			}
-		}
+public int itemToCash(ItemStack coins) {
+	if(coins.getItem()==Item.getItemById(266)) {
+		return coins.stackSize;
 	}
-	
-	if(cheapest==null) {return false;}
-	ItemStack stack;
-	int val=0;
-	int eaten = 0;
-	
-	for(int i = 0 ; i<9;i++){
-		stack = cheapest.getOutputStack(i);
-		val += AncientWarfareNPC.statics.getFoodValue(stack);
-		
-	}    
-	eaten=val;
-	//cheapest.perfromTrade(this, container.tradeInput, container.storage);
-	setFoodRemaining(getFoodRemaining()+eaten);
-	return getFoodRemaining()>=getUpkeepAmount();
- */
-//this is the old version, keep that shit collapsed. If your IDE doesn't let you collapse a block comment, get a better IDE.
-//Sorry.
-
-public boolean withdrawFood(List<NpcTrader> traderList){
-	
-	if(getFoodRemaining()>=getUpkeepAmount()){return true;}
-	
-
-	for(NpcTrader trader : traderList) {
-		InventoryBackpack backpack = trader.backpackInventory;
-		for(int i = 0; i<= backpack.getSizeInventory(); i++) {
-			ItemStack stack = backpack.getStackInSlot(i);
-			int foodValue = AncientWarfareNPC.statics.getFoodValue(stack);
-			if(foodValue >=0){
-				//setFoodRemaining(getFoodRemaining()+foodValue);
-				backpack.decrStackSize(i, 1);
-				if(getFoodRemaining()>=getUpkeepAmount()) { return true;}
-			}
-		}
-	}
-	
-	return false;
+	return 0;
 }
+
+public boolean withdrawFood(TileEntityTradeBoothTop inventory, int side){
+	int minPrice = 0;
+	int bestSlotIndex=-1;
+	for(int i = 0; i <16; i++){
+		ItemStack buyStack = inventory.getStackInSlot(i);
+		int foodVal = AncientWarfareNPC.statics.getFoodValue(buyStack);
+		if(foodVal > 0){
+			int p2Index = i - 1 + 52 - ( i / 2 );
+			ItemStack priceStack1 = inventory.getStackInSlot(i-1);
+			ItemStack priceStack2 = inventory.getStackInSlot(p2Index);
+			int price = itemToCash(priceStack1) + itemToCash(priceStack2);
+			if(price < minPrice) {
+				minPrice = price;
+				bestSlotIndex = i;
+			}
+		}
+	}
+	
+	if(cash > minPrice) { //If we can afford the cheapest food, buy it
+		ItemStack bestFood = inventory.getStackInSlot(bestSlotIndex);
+		cash -= minPrice;
+		ItemStack price = new ItemStack(Item.getItemById(266), minPrice);
+		TileEntityTradeBoothStorage storage = (TileEntityTradeBoothStorage) worldObj.getTileEntity((int)Math.round(this.posX), (int)Math.round(this.posY-1), (int)Math.round(this.posZ));
+		if(storage.canAcceptItemStack(price)){
+			storage.addToStorage(price);
+		}
+		if(storage.canProvideItemStack(bestFood)) {
+			storage.removeStack(bestFood);
+		}
+		setFoodRemaining(getFoodRemaining()+AncientWarfareNPC.statics.getFoodValue(bestFood));
+	}else { //If we can't afford the cheapest food, return false
+		return false; //TODO if we can't afford food, buy instant ramen
+	}
+	if(getFoodRemaining()>=getUpkeepAmount()){ //If we're full
+		return true; //Then we're done - return true.
+	}
+	return withdrawFood(inventory, side); //We're still hungry after buying, so we try again
+ }
 
 @Override
 public void openGUI(EntityPlayer player)
