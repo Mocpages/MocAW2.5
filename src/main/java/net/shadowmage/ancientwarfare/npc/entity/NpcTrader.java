@@ -1,6 +1,5 @@
 package net.shadowmage.ancientwarfare.npc.entity;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.entity.Entity;
@@ -14,8 +13,6 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.world.World;
-import net.minecraft.util.DamageSource;
-import net.shadowmage.ancientwarfare.core.api.AWItems;
 import net.shadowmage.ancientwarfare.core.inventory.InventoryBackpack;
 import net.shadowmage.ancientwarfare.core.item.ItemBackpack;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
@@ -32,16 +29,13 @@ import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
 import net.shadowmage.ancientwarfare.npc.item.ItemTradeOrder;
 import net.shadowmage.ancientwarfare.npc.orders.TradeOrder;
 import net.shadowmage.ancientwarfare.npc.trade.POTradeList;
-import net.shadowmage.ancientwarfare.npc.trade.POTrade;
 
 public class NpcTrader extends NpcPlayerOwned
 {
 
 public EntityPlayer trader;//used by guis/containers to prevent further interaction
-private List<POTrade> tradeList = new ArrayList<POTrade>();
-private static List<NpcTrader> traderList = new ArrayList<NpcTrader>();
+private POTradeList tradeList = new POTradeList();
 private NpcAIPlayerOwnedTrader tradeAI;
-public InventoryBackpack backpackInventory;
 
 public NpcTrader(World par1World)
   {
@@ -63,21 +57,12 @@ public NpcTrader(World par1World)
   this.tasks.addTask(101, new EntityAIWatchClosest2(this, EntityPlayer.class, 3.0F, 1.0F));
   this.tasks.addTask(102, new NpcAIWander(this, 0.625D));
   this.tasks.addTask(103, new EntityAIWatchClosest(this, EntityLiving.class, 8.0F));
-  
-  this.traderList.add(this);
   }
 
 @Override
-public void onDeath(DamageSource source) {
-	super.onDeath(source);
-}
-
-public static NpcTrader getCheapestFoodVendor(NpcBase n) {
-	NpcTrader trade = null;
-	for(NpcTrader t : traderList) {
-		trade = t;
-	}
-	return trade;
+public void onEntityUpdate() {
+	super.setFoodRemaining(10);
+	super.onEntityUpdate();
 }
 
 @Override
@@ -108,20 +93,6 @@ public String getNpcSubType()
 public String getNpcType()
   {
   return "trader";
-  }
-
-@Override
-public void onWeaponInventoryChanged()
-  {
-  super.onWeaponInventoryChanged();
-  if(getEquipmentInSlot(0)!=null && getEquipmentInSlot(0).getItem()==AWItems.backpack)
-    {
-    backpackInventory = ItemBackpack.getInventoryFor(getEquipmentInSlot(0));
-    }
-  else
-    {
-    backpackInventory=null;
-    }
   }
 
 @Override
@@ -192,13 +163,6 @@ public boolean shouldBeAtHome()
   }
 
 @Override
-public void onLivingUpdate()
-  {  
-  super.onLivingUpdate();
-  super.setFoodRemaining(10);
- }
-
-@Override
 public boolean isHostileTowards(Entity e)
   {
   return false;
@@ -206,9 +170,97 @@ public boolean isHostileTowards(Entity e)
 
 public POTradeList getTradeList()
   {
-	return null;
- // return tradeList;
+  return tradeList;
   }
+
+public void removeItems(ItemStack stack, int quantity) {
+	InventoryBackpack backpackInventory = ItemBackpack.getInventoryFor(this.getEquipmentInSlot(0));
+    if(backpackInventory  == null) { return; }
+    for(int i=0; i<backpackInventory.getSizeInventory(); i++) { //for each slot in my backpack
+    	if(quantity <=0) {
+    		break;
+    	}
+    	ItemStack s = backpackInventory.getStackInSlot(i); //get the item in that slot
+    	if(s != null) { //if there is an item in that slot
+    		if(s.isItemEqual(stack)) { //if it's the item we're removing
+    			if(quantity >= s.stackSize) { //if we need the whole stack (or more)
+    				quantity -= s.stackSize; //decrease the remaining amount to remove by the number of items 
+    				backpackInventory.setInventorySlotContents(i, null); //delete the stack
+    			}else{ //if we need only part of the stack
+    				//backpackInventory.setInventorySlotContents(i, new ItemStack(s.getItem(), s.stackSize - quantity));
+    				backpackInventory.decrStackSize(i, quantity); //remove part of the stack
+    				quantity = 0;
+    			}
+    		}
+    	}
+    }
+
+    backpackInventory.markDirty();
+    ItemBackpack.writeBackpackToItem(backpackInventory, getEquipmentInSlot(0));
+}
+
+public boolean hasSufficient(ItemStack stack, int qty) {
+  InventoryBackpack backpackInventory = ItemBackpack.getInventoryFor(this.getEquipmentInSlot(0));
+  int found = 0;
+  if(backpackInventory  != null) {
+        for(int i=0; i<backpackInventory.getSizeInventory(); i++) {
+            ItemStack s = backpackInventory.getStackInSlot(i);
+            if(s != null) {
+                if(s.isItemEqual(stack)) {
+                    found += s.stackSize;
+                }
+                if(found >= qty) {
+                    return true;
+                }
+            }
+        }
+  }
+  return false;
+}
+public void addItems(ItemStack stack) {
+	InventoryBackpack backpackInventory = ItemBackpack.getInventoryFor(this.getEquipmentInSlot(0));
+	for(int i=0; i<backpackInventory.getSizeInventory(); i++) {
+		ItemStack s = backpackInventory.getStackInSlot(i);
+		if(s==null) { //slots empty
+			backpackInventory.setInventorySlotContents(i, stack);
+			return;
+		}else { //slot's not empty
+			if(s.isItemEqual(stack)) { //if it's the item we want
+				if(s.getMaxStackSize() - s.stackSize >= stack.stackSize) {
+					s.stackSize += stack.stackSize;
+					return;
+				}else {
+					int storable = s.getMaxStackSize() - s.stackSize;
+					stack.stackSize -= storable;
+					s.stackSize = s.getMaxStackSize();
+				}
+			}
+		}
+	}
+	backpackInventory.markDirty();
+    ItemBackpack.writeBackpackToItem(backpackInventory, getEquipmentInSlot(0));
+}
+
+public boolean canStore(List<ItemStack> items) { //note: must all be the same item, or shit gets fucky. 
+  InventoryBackpack backpackInventory = ItemBackpack.getInventoryFor(this.getEquipmentInSlot(0));
+  int num = 0;
+  int max = items.get(0).getMaxStackSize();
+  ItemStack s1 = items.get(0);
+  for(ItemStack stack : items) {
+      num += stack.stackSize;
+  }
+  for(int i=0; i<backpackInventory.getSizeInventory(); i++) {
+      ItemStack s = backpackInventory.getStackInSlot(i);
+      if(s==null) { //slots empty
+          num -= max; //so we can store a whole stack
+      }else { //slot's not empty
+          if(s.isItemEqual(s1)) { //if it's the item we want
+              num += max - s.stackSize;
+          }
+      }
+  }
+  return num <= 0;
+}
 
 @Override
 public void writeEntityToNBT(NBTTagCompound tag)

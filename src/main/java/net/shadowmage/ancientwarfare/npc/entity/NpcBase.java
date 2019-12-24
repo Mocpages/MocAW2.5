@@ -543,7 +543,7 @@ public final void readAdditionalItemData(NBTTagCompound tag)
  * This should include inventory, levels, orders, faction / etc
  * @param tag
  */
-public final NBTTagCompound writeAdditionalItemData(NBTTagCompound tag)
+public NBTTagCompound writeAdditionalItemData(NBTTagCompound tag)
   {
   NBTTagList equipmentList = new NBTTagList();
   ItemStack stack;

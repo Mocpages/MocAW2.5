@@ -11,6 +11,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraftforge.common.util.Constants;
 import net.shadowmage.ancientwarfare.core.util.InventoryTools;
 import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
+import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 
 
 public class POTrade
@@ -49,8 +50,8 @@ private void updateCompactInput()
     {
     if(input[i]!=null){list.add(input[i].copy());}
     }
-  compactInput.clear();
-  InventoryTools.compactStackList3(list, compactInput);
+  getCompactInput().clear();
+  InventoryTools.compactStackList3(list, getCompactInput());
   }
 
 private void updateCompactOutput()
@@ -60,8 +61,8 @@ private void updateCompactOutput()
     {
     if(output[i]!=null){list.add(output[i].copy());}
     }
-  compactOutput.clear();
-  InventoryTools.compactStackList3(list, compactOutput);
+  getCompactOutput().clear();
+  InventoryTools.compactStackList3(list, getCompactOutput());
   }
 
 /**
@@ -72,12 +73,12 @@ private void updateCompactOutput()
 public boolean isAvailable(IInventory storage)
   {
   ItemStack stack;
-  for(int i = 0; i < compactOutput.size(); i++)
+  for(int i = 0; i < getCompactOutput().size(); i++)
     {
-    stack = compactOutput.get(i);
+    stack = getCompactOutput().get(i);
     if(InventoryTools.getCountOf(storage, -1, stack) < stack.stackSize){return false;}
     }
-  return InventoryTools.canInventoryHold(storage, -1, compactInput);
+  return InventoryTools.canInventoryHold(storage, -1, getCompactInput());
   }
 
 /**
@@ -122,7 +123,7 @@ public void perfromTrade(EntityPlayer player, IInventory tradeGrid, IInventory s
     } 
   }
 
-public void perfromTrade(NpcBase npc, IInventory tradeGrid, IInventory storage)
+public void perfromTrade(NpcPlayerOwned npc, IInventory tradeGrid, IInventory storage)
 {
 boolean found = true;
 ItemStack inputStack, invStack;
@@ -151,7 +152,7 @@ if(found)
     outputStack = output[i];
     if(outputStack==null){continue;}
     outputStack = InventoryTools.removeItems(storage, -1, outputStack, outputStack.stackSize);//remove from storage
-    //outputStack = InventoryTools.mergeItemStack(npc.inventory, outputStack, -1);//merge into player inventory, drop any unused portion on next line
+    outputStack = InventoryTools.mergeItemStack(npc.invBack, outputStack, -1);//merge into player inventory, drop any unused portion on next line
     if(outputStack!=null && !npc.worldObj.isRemote){InventoryTools.dropItemInWorld(npc.worldObj, outputStack, npc.posX, npc.posY, npc.posZ);}//only drop into world if on server!
     }
   } 
@@ -206,5 +207,21 @@ public void readFromNBT(NBTTagCompound tag)
   updateCompactInput();
   updateCompactOutput();
   }
+
+public List<ItemStack> getCompactInput() {
+	return compactInput;
+}
+
+public void setCompactInput(List<ItemStack> compactInput) {
+	this.compactInput = compactInput;
+}
+
+public List<ItemStack> getCompactOutput() {
+	return compactOutput;
+}
+
+public void setCompactOutput(List<ItemStack> compactOutput) {
+	this.compactOutput = compactOutput;
+}
 
 }

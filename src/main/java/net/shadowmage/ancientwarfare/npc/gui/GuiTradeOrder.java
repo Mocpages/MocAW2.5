@@ -136,9 +136,9 @@ private void setRestockMode()
 private void setupTradeMode()
   {  
   tradesArea.clearElements();
- // final POTradeList tradeList = container.orders.getTradeList();  
+  final POTradeList tradeList = container.orders.getTradeList();  
   ArrayList<POTrade> trades = new ArrayList<POTrade>();  
-  //tradeList.getTrades(trades);
+  tradeList.getTrades(trades);
     
   int totalHeight = 8;
   
@@ -152,7 +152,7 @@ private void setupTradeMode()
     @Override
     protected void onPressed()
       {
-    //  tradeList.addNewTrade();
+    	tradeList.addNewTrade();
       refreshGui();
       }
     };

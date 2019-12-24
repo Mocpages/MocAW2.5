@@ -48,9 +48,9 @@ dependencies {
   }
   compile files {
     "lib/CoFHLib-[1.7.10]1.0.0B7-dev-29.jar"
-  }  
-  compile files { 
-     "lib/tradebooth.1.7.10.2.jar"
+  }
+  compile files {
+    "lib/vending.jar"
   }
 }
 

@@ -1,21 +1,18 @@
 package net.shadowmage.ancientwarfare.npc.orders;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
 import net.shadowmage.ancientwarfare.npc.trade.POTradeList;
 import net.shadowmage.ancientwarfare.npc.trade.POTradeRestockData;
 import net.shadowmage.ancientwarfare.npc.trade.POTradeRoute;
-import net.shadowmage.ancientwarfare.npc.trade.POTrade;
 
 public class TradeOrder extends NpcOrders
 {
 
 private POTradeRoute tradeRoute = new POTradeRoute(); 
 private POTradeRestockData restockEntry = new POTradeRestockData();
-private List<POTrade> tradeList = new ArrayList<POTrade>();
+private POTradeList tradeList = new POTradeList();
 
 public TradeOrder(){}
 
@@ -41,7 +38,7 @@ public static void writeTradeOrder(ItemStack stack, TradeOrder order)
     }
   }
 
-public List<POTrade> getTradeList(){return tradeList;}
+public POTradeList getTradeList(){return tradeList;}
 
 public POTradeRoute getRoute(){return tradeRoute;}
 
@@ -50,10 +47,10 @@ public POTradeRestockData getRestockData(){return restockEntry;}
 @Override
 public void readFromNBT(NBTTagCompound tag)
   {
-  tradeList = new ArrayList<POTrade>();
+  tradeList = new POTradeList();
   tradeRoute = new POTradeRoute();
   restockEntry = new POTradeRestockData();
-  //tradeList.readFromNBT(tag.getCompoundTag("tradeList"));
+  tradeList.readFromNBT(tag.getCompoundTag("tradeList"));
   tradeRoute.readFromNBT(tag.getCompoundTag("tradeRoute"));
   restockEntry.readFromNBT(tag.getCompoundTag("restockEntry"));
   }
@@ -61,7 +58,7 @@ public void readFromNBT(NBTTagCompound tag)
 @Override
 public NBTTagCompound writeToNBT(NBTTagCompound tag)
   {
-  //tag.setTag("tradeList", tradeList.writeToNBT(new NBTTagCompound()));
+  tag.setTag("tradeList", tradeList.writeToNBT(new NBTTagCompound()));
   tag.setTag("tradeRoute", tradeRoute.writeToNBT(new NBTTagCompound()));
   tag.setTag("restockEntry", restockEntry.writeToNBT(new NBTTagCompound()));
   return tag;

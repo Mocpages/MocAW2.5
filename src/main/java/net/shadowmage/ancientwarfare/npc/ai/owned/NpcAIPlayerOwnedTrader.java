@@ -202,13 +202,8 @@ private void updateUpkeep()
 
 protected boolean tryWithdrawUpkeep()
   {
-  BlockPosition p = npc.getUpkeepPoint();
-  TileEntity te = npc.worldObj.getTileEntity(p.x, p.y, p.z);
-  if(te instanceof IInventory)
-    {
-    return true; //todo fix?
-    }
-  return false;
+	return true;
+    //return trader.withdrawFood();
   }
 
 private void updateRestock()
