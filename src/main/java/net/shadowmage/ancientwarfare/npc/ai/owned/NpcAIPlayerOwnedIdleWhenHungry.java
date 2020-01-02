@@ -19,14 +19,14 @@ public NpcAIPlayerOwnedIdleWhenHungry(NpcBase npc)
 public boolean shouldExecute()
   {
   if(!npc.getIsAIEnabled()){return false;}
-  return npc.getAttackTarget()==null && npc.requiresUpkeep() && npc.getFoodRemaining()==0;
+  return npc.getAttackTarget()==null && npc.requiresUpkeep() && (npc.isPayday() || npc.idle());
   }
 
 @Override
 public boolean continueExecuting()
   {
   if(!npc.getIsAIEnabled()){return false;}
-  return npc.getAttackTarget()==null && npc.requiresUpkeep() && npc.getFoodRemaining()==0;
+  return npc.getAttackTarget()==null && npc.requiresUpkeep() && (npc.isPayday() || npc.idle());
   }
 
 /**

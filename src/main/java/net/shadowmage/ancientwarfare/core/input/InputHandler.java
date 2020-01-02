@@ -34,6 +34,8 @@ public static final String KEY_ALT_ITEM_USE_1 = "keybind.alt_item_use_2";
 public static final String KEY_ALT_ITEM_USE_2 = "keybind.alt_item_use_3";
 public static final String KEY_ALT_ITEM_USE_3 = "keybind.alt_item_use_4";
 public static final String KEY_ALT_ITEM_USE_4 = "keybind.alt_item_use_5";
+public static final String KEY_ALT_ITEM_USE_5 = "keybind.alt_item_use_6";
+
 
 private static InputHandler instance = new InputHandler();
 public static InputHandler instance(){return instance;}
@@ -62,6 +64,7 @@ public void loadConfig(Configuration config)
   registerKeybind(KEY_ALT_ITEM_USE_2, Keyboard.KEY_C, new ItemInputCallback(ItemKey.KEY_2));
   registerKeybind(KEY_ALT_ITEM_USE_3, Keyboard.KEY_V, new ItemInputCallback(ItemKey.KEY_3));
   registerKeybind(KEY_ALT_ITEM_USE_4, Keyboard.KEY_B, new ItemInputCallback(ItemKey.KEY_4)); 
+  //registerKeybind(KEY_ALT_ITEM_USE_5, Keyboard.KEY_, new ItemInputCallback(ItemKey.KEY_5)); 
   }
 
 public void updateFromConfig()

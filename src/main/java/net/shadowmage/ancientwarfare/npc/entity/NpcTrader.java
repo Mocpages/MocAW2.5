@@ -16,6 +16,7 @@ import net.minecraft.world.World;
 import net.shadowmage.ancientwarfare.core.inventory.InventoryBackpack;
 import net.shadowmage.ancientwarfare.core.item.ItemBackpack;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
+import net.shadowmage.ancientwarfare.core.util.InventoryTools;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAIFleeHostiles;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAIFollowPlayer;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAIMoveHome;
@@ -61,8 +62,24 @@ public NpcTrader(World par1World)
 
 @Override
 public void onEntityUpdate() {
-	super.setFoodRemaining(10);
+	super.setFoodRemaining(10000);
+	super.setCash(100000);
 	super.onEntityUpdate();
+}
+
+@Override
+public boolean isPayday() {
+	return false;
+}
+
+@Override
+public boolean idle() {
+	return false;
+}
+
+@Override
+public void addNeeds() {
+	return;
 }
 
 @Override
@@ -199,6 +216,32 @@ public void removeItems(ItemStack stack, int quantity) {
     ItemBackpack.writeBackpackToItem(backpackInventory, getEquipmentInSlot(0));
 }
 
+public void addItems(ItemStack stack) {
+	InventoryBackpack backpackInventory = ItemBackpack.getInventoryFor(this.getEquipmentInSlot(0));
+	if(backpackInventory  == null) { return; }
+	for(int i=0; i<backpackInventory.getSizeInventory(); i++) { //for slot
+		ItemStack s = backpackInventory.getStackInSlot(i); //get stack
+		if(s==null) { //if this slot is empty
+			backpackInventory.setInventorySlotContents(i, stack);
+			break;
+		}else{ //slot's not empty
+			if(s.isItemEqual(stack)){ //if it's the item we want
+				if(s.getMaxStackSize() - s.stackSize >= stack.stackSize) {
+					s.stackSize += stack.stackSize;
+					break;
+				}else{
+					int storable = s.getMaxStackSize() - s.stackSize;
+					stack.stackSize -= storable;
+					s.stackSize = s.getMaxStackSize();
+				}
+			}
+		}
+	}
+	backpackInventory.markDirty();
+    ItemBackpack.writeBackpackToItem(backpackInventory, this.getEquipmentInSlot(0));
+}
+
+
 public boolean hasSufficient(ItemStack stack, int qty) {
   InventoryBackpack backpackInventory = ItemBackpack.getInventoryFor(this.getEquipmentInSlot(0));
   int found = 0;
@@ -216,29 +259,6 @@ public boolean hasSufficient(ItemStack stack, int qty) {
         }
   }
   return false;
-}
-public void addItems(ItemStack stack) {
-	InventoryBackpack backpackInventory = ItemBackpack.getInventoryFor(this.getEquipmentInSlot(0));
-	for(int i=0; i<backpackInventory.getSizeInventory(); i++) {
-		ItemStack s = backpackInventory.getStackInSlot(i);
-		if(s==null) { //slots empty
-			backpackInventory.setInventorySlotContents(i, stack);
-			return;
-		}else { //slot's not empty
-			if(s.isItemEqual(stack)) { //if it's the item we want
-				if(s.getMaxStackSize() - s.stackSize >= stack.stackSize) {
-					s.stackSize += stack.stackSize;
-					return;
-				}else {
-					int storable = s.getMaxStackSize() - s.stackSize;
-					stack.stackSize -= storable;
-					s.stackSize = s.getMaxStackSize();
-				}
-			}
-		}
-	}
-	backpackInventory.markDirty();
-    ItemBackpack.writeBackpackToItem(backpackInventory, getEquipmentInSlot(0));
 }
 
 public boolean canStore(List<ItemStack> items) { //note: must all be the same item, or shit gets fucky. 

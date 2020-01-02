@@ -15,6 +15,7 @@ import net.shadowmage.ancientwarfare.core.util.WorldTools;
 import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
 import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
 import net.shadowmage.ancientwarfare.npc.network.PacketNpcCommand;
+import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 
 public class NpcCommand
 {
@@ -69,14 +70,104 @@ public static void handleServerCommand(EntityPlayer player, CommandType type, bo
     }
   List<Entity> targets = new ArrayList<Entity>();
   ItemCommandBaton.getCommandedEntities(player.worldObj, player.getCurrentEquippedItem(), targets);
-  for(Entity e : targets)
+  int i = 0;
+  NpcPlayerOwned p = (NpcPlayerOwned) targets.get(0);
+  if(type == CommandType.SET_HOME){
+	  type = CommandType.MOVE;
+	  double dist = getDist(p.x2, p.y2, p.getPX(), p.getPZ());
+	  double angle = Math.atan2(z-p.cy, x-p.cx);
+	  //angle += Math.PI/2;
+	  int dx = Math.toIntExact(Math.round(Math.sin(angle) * (dist/2)));
+	  int dz = Math.toIntExact(Math.round(Math.cos(angle) * (dist/2)));
+	  x = p.cx + dx;
+	  z = p.cy + dz;
+	  for(Entity e : targets) {
+		  p = (NpcPlayerOwned) e;
+		  p.setP(p.cx - dx, p.cy - dz);
+	  }
+  }
+  double rows = targets.size() / getDist(p.x2, p.y2, p.getPX(), p.getPZ());
+  int files = (int) Math.ceil(targets.size() / rows);
+	  for(Entity e : targets)
+	    {
+	    if(e instanceof NpcBase)
+	      {
+	      if(type == CommandType.GUARD) {
+	    	  p = ((NpcPlayerOwned)e);
+	    	  p.setP(x, z);
+	    	  p.setCustomNameTag("Test1");
+	    	  p.cx = (p.x2 - x)/2;
+		      p.cy = (p.y2 - z)/2;
+		      int x2 = interpolate(x, p.x2, files, targets.size());
+		      int z2 = interpolate(z, p.y2, files, targets.size());
+		      cmd = new Command(type, x2, y, z2);
+		      i++;
+		      ((NpcBase)e).handlePlayerCommand(cmd);
+	      }else {
+	    	  p = ((NpcPlayerOwned)e);
+		      p.cx = (p.getPX() + x)/2;
+		      p.cy = (p.getPZ() + z)/2;
+		      p.x2 = x;
+		      p.y2 = z;
+		   //   p.setCustomNameTag(Float.toString(f));
+		      int x2 = interpolate(p.getPX(), x, i, targets.size());
+		      int z2 = interpolate(p.getPZ(), z, i, targets.size());
+		      cmd = new Command(type, x2, y, z2);
+		      i++;
+		      p.setCustomNameTag("X:"+Integer.toString(x2)+" Z:"+Integer.toString(z2));
+		      ((NpcBase)e).handlePlayerCommand(cmd);
+	      	}
+	      }
+	    }
+  }
+
+public static int interpolate(int initial, int last, int i, int n) {
+	return  Math.round(initial + ((float)i/(n-1)) * (last - initial));
+}
+
+public static double getDist(int x1, int y1, int x2, int y2) {
+	int rise = y2-y1;
+	int run = x2 - x1;
+	return Math.sqrt(rise * rise + run * run);
+}
+
+public static float getSlope(int x1, int y1, int x2, int y2) {
+	float rise = y2 - y1;
+	float run = x2 - x1;
+	if(rise != 0) {
+		return run / rise;
+	}
+	return (float) Integer.MAX_VALUE;
+}
+
+
+public static void handleServerCommand(EntityPlayer player, CommandType type, boolean block, int xp, int yp, int zp, int x, int y, int z)
+{
+Command cmd = null;
+if(block)
+  {
+  cmd = new Command(type, x, y, z);
+  }
+else
+  {
+  cmd = new Command(type, x);
+  }	
+List<Entity> targets = new ArrayList<Entity>();
+ItemCommandBaton.getCommandedEntities(player.worldObj, player.getCurrentEquippedItem(), targets);
+int i = 0;
+float m = getSlope(x, z, xp, zp);
+for(Entity e : targets)
+  {
+  if(e instanceof NpcBase)
     {
-    if(e instanceof NpcBase)
-      {
-      ((NpcBase)e).handlePlayerCommand(cmd);
-      }
+    cmd = new Command(type, x + i, y, z + Math.round(i * m));
+    ((NpcBase) e).setCustomNameTag(Float.toString(m));
+    i++;
+    ((NpcBase)e).handlePlayerCommand(cmd);
     }
   }
+}
+
 
 public static final class Command
 {

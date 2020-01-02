@@ -11,6 +11,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -78,6 +79,22 @@ public NpcBase(World par1World)
   this.width = 0.6f;
   this.func_110163_bv();//set persistence required==true
   }
+
+public boolean isPayday() {
+	return false;
+}
+
+public int getCash() {
+	return -1;
+}
+
+public boolean idle() {
+	return false;
+}
+
+public boolean takePay(IInventory inventory, int side) {
+	return false;
+}
 
 @Override
 protected void entityInit()

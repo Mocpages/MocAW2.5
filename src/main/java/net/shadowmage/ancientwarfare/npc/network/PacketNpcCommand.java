@@ -18,7 +18,7 @@ public class PacketNpcCommand extends PacketBase
 
 CommandType type;
 boolean blockTarget;
-int x, y, z;
+int x, y, z, xp, yp, zp;
 
 public PacketNpcCommand(CommandType type, Entity ent)
   {
@@ -35,6 +35,7 @@ public PacketNpcCommand(CommandType type, int x, int y, int z)
   this.y = y;
   this.z = z;
   }
+
 
 public PacketNpcCommand()
   {

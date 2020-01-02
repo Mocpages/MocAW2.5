@@ -52,14 +52,14 @@ public NpcAIPlayerOwnedGetFood(NpcPlayerOwned npc)
 public boolean shouldExecute()
   {
   if(!npc.getIsAIEnabled()){return false;}
-  return npc.requiresUpkeep() && npc.getUpkeepPoint()!=null && npc.getFoodRemaining()==0 && npc.getUpkeepDimensionId()==npc.worldObj.provider.dimensionId;
+  return npc.requiresUpkeep() && npc.getUpkeepPoint()!=null && (npc.isPayday() || npc.idle()) && npc.getUpkeepDimensionId()==npc.worldObj.provider.dimensionId;
   }
 
 @Override
 public boolean continueExecuting()
   {
   if(!npc.getIsAIEnabled()){return false;}
-  return npc.requiresUpkeep() && npc.getUpkeepPoint()!=null && npc.getFoodRemaining() < npc.getUpkeepAmount() && npc.getUpkeepDimensionId()==npc.worldObj.provider.dimensionId;
+  return npc.requiresUpkeep() && npc.getUpkeepPoint()!=null && ((npc.getCash() < npc.getUpkeepAmount()) || npc.idle()) && npc.getUpkeepDimensionId()==npc.worldObj.provider.dimensionId;
   }
 
 /**
@@ -84,15 +84,20 @@ public void startExecuting()
  */	//tryUpkeep(traderList);
 @Override
 public void updateTask(){
-	BlockPosition pos = npc.getUpkeepPoint();
-	if(pos==null){return;}
-	double dist = npc.getDistanceSq(pos.x+0.5d, pos.y, pos.z+0.5d);
-	if(dist>5.d*5.d){
-		npc.addAITask(TASK_MOVE);
-		moveToPosition(pos, dist);
-	}else{
-	    npc.removeAITask(TASK_MOVE);
-	    tryUpkeep(pos);
+	if(npc.isPayday()) {
+		BlockPosition pos = npc.getUpkeepPoint();
+		if(pos==null){return;}
+		double dist = npc.getDistanceSq(pos.x+0.5d, pos.y, pos.z+0.5d);
+		if(dist>5.d*5.d){
+			npc.addAITask(TASK_MOVE);
+			moveToPosition(pos, dist);
+		}else{
+		    npc.removeAITask(TASK_MOVE);
+		    tryUpkeep(pos);
+		}
+	}
+	if(npc.idle()) {
+		buyItems();
 	}
 }
 //TileEntityTradeBoothTop te = (TileEntityTradeBoothTop)npc.worldObj.getTileEntity(pos.x, pos.y, pos.z);
@@ -103,10 +108,19 @@ public void updateTask(){
 //}
 protected void tryUpkeep(BlockPosition pos)
 {
+	TileEntity te = npc.worldObj.getTileEntity(pos.x, pos.y, pos.z);
+	  int side = npc.getUpkeepBlockSide();
+	  if(te instanceof IInventory)
+	    {
+	    ((NpcPlayerOwned)npc).takePay((IInventory) te, side);
+	    }
+}
+
+public void buyItems() {
 	double dist =50; 
 	AxisAlignedBB bb = npc.boundingBox.expand(dist, dist/2, dist);
 	List<NpcTrader> traderList =npc.worldObj.selectEntitiesWithinAABB(NpcTrader.class, bb, selector);
-	((NpcPlayerOwned)npc).withdrawFood(traderList);
+	((NpcPlayerOwned)npc).buyNeeds(traderList);
 }
 
 /**

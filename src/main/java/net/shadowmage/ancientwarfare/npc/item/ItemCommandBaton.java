@@ -39,6 +39,7 @@ public class ItemCommandBaton extends Item implements IItemKeyInterface, IItemCl
 {
 
 double attackDamage = 5.d;
+MovingObjectPosition pos;
 
 private ToolMaterial material;
 
@@ -223,8 +224,9 @@ public boolean onKeyActionClient(EntityPlayer player, ItemStack stack, ItemKey k
     MovingObjectPosition hit = RayTraceUtils.getPlayerTarget(player, 120, 0);//new MovingObjectPosition(player);
     if(hit!=null)
       {
+      pos = hit;
       CommandType c = hit.typeOfHit==MovingObjectType.ENTITY ? CommandType.GUARD : CommandType.MOVE;
-      NpcCommand.handleCommandClient(c, hit);
+      NpcCommand.handleCommandClient(CommandType.GUARD, hit);
       }
     }
     break;
@@ -233,8 +235,10 @@ public boolean onKeyActionClient(EntityPlayer player, ItemStack stack, ItemKey k
     MovingObjectPosition hit = RayTraceUtils.getPlayerTarget(player, 120, 0);//new MovingObjectPosition(player);
     if(hit!=null && hit.typeOfHit==MovingObjectType.BLOCK)
       {
-      CommandType c = player.isSneaking() ? CommandType.CLEAR_HOME : CommandType.SET_HOME;
-      NpcCommand.handleCommandClient(c, hit);
+      if(pos != null) {
+    	  CommandType c = player.isSneaking() ? CommandType.CLEAR_HOME : CommandType.SET_HOME;
+    	  NpcCommand.handleCommandClient(c, hit);
+      	}
       }
     }
     break;

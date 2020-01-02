@@ -34,6 +34,8 @@ import net.shadowmage.ancientwarfare.npc.config.AWNPCStatics;
 import net.shadowmage.ancientwarfare.npc.container.ContainerNpcPlayerOwnedTrade;
 import net.shadowmage.ancientwarfare.npc.entity.faction.NpcFaction;
 import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
+import net.shadowmage.ancientwarfare.npc.needs.INeed;
+import net.shadowmage.ancientwarfare.npc.needs.NeedHelper;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.Command;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.CommandType;
 import net.shadowmage.ancientwarfare.npc.orders.UpkeepOrder;
@@ -46,11 +48,20 @@ import net.shadowmage.ancientwarfare.npc.trade.POTradeList;
 public abstract class NpcPlayerOwned extends NpcBase
 {
 
+private List<INeed> needs = new ArrayList<INeed>();
 private Command playerIssuedCommand;//TODO load/save
 private int foodValueRemaining = 0;
-private int cash = 1000;
+private int cash = 0;
+private int timeToPayday = 0;
+private int pay = 0;
 public InventoryBackpack invBack = new InventoryBackpack(27);
 protected NpcAIPlayerOwnedRideHorse horseAI;
+private int x1 = 0;
+private int y1 = 0;
+public int x2 = 0;
+public int y2 = 0;
+public int cx = 0;
+public int cy = 0;
 
 private BlockPosition townHallPosition;
 private BlockPosition upkeepAutoBlock;
@@ -58,8 +69,28 @@ private BlockPosition upkeepAutoBlock;
 public NpcPlayerOwned(World par1World)
   {
   super(par1World);
-  invBack.setInventorySlotContents(0, new ItemStack(Items.gold_ingot, 64));
+  //invBack.setInventorySlotContents(0, new ItemStack(Items.gold_ingot, 64));
+  addNeeds();
   }
+
+public void addNeeds() {
+	needs.add(NeedHelper.starchNeed(this));
+	needs.add(NeedHelper.textilesNeed(this));
+	needs.add(NeedHelper.fuelNeed(this));
+}
+
+public void setP(int a, int b) {
+	x1 = a;
+	y1 = b;
+}
+
+public int getPX() {
+	return x1;
+}
+
+public int getPZ() {
+	return y1;
+}
 
 @Override
 public void setCurrentItemOrArmor(int slot, ItemStack stack)
@@ -67,6 +98,83 @@ public void setCurrentItemOrArmor(int slot, ItemStack stack)
   super.setCurrentItemOrArmor(slot, stack);
   if(slot==0){onWeaponInventoryChanged();}
   }
+
+@Override
+public boolean isPayday() {
+	if(timeToPayday <= 0) {
+		return true;
+	}else {
+		return false;
+	}
+}
+
+public boolean idle() {
+	for(INeed n : needs) {
+		if(n.shouldIdle()){
+			return true;
+		}
+	}
+	return false;
+}
+
+@Override
+public int getCash() {
+	return cash;
+}
+
+@Override
+public boolean takePay(IInventory inventory, int side) {
+	 int amount = getUpkeepAmount() - cash;
+	  if(amount<=0){return true;}
+	  ItemStack stack;
+	  int val;
+	  int eaten = 0;
+	  if(side>=0 && inventory instanceof ISidedInventory)
+	    {
+	    int[] ind = ((ISidedInventory)inventory).getAccessibleSlotsFromSide(side);
+	    for(int i : ind)
+	      {
+	      stack = inventory.getStackInSlot(i);
+	      val = this.itemToCash(stack);
+	      if(val<=0){continue;}
+	      while(eaten < amount && stack.stackSize>0)
+	        {
+	        eaten+=val;
+	        stack.stackSize--;
+	        inventory.markDirty();
+	        }
+	      if(stack.stackSize<=0)
+	        {
+	        inventory.setInventorySlotContents(i, null);
+	        }
+	      }    
+	    }
+	  else
+	    {
+	    for(int i = 0 ; i<inventory.getSizeInventory();i++)
+	      {
+	      stack = inventory.getStackInSlot(i);
+	      val = this.itemToCash(stack);
+	      if(val<=0){continue;}
+	      while(eaten < amount && stack.stackSize>0)
+	        {
+	        eaten+=val;
+	        stack.stackSize--;
+	        inventory.markDirty();
+	        }
+	      if(stack.stackSize<=0)
+	        {
+	        inventory.setInventorySlotContents(i, null);
+	        }
+	      }    
+	    }
+	  cash = cash+eaten;
+	  if(cash>= getUpkeepAmount()) {
+		  timeToPayday = 24000;
+		  return true;
+	  }
+	  return false;
+}
 
 @Override
 public void onDeath(DamageSource source)
@@ -205,6 +313,9 @@ public void handlePlayerCommand(Command cmd)
         }
       }
     cmd=null;
+    }else if(cmd!=null && cmd.type == CommandType.MOVE) {
+    	//x2=cmd.x;
+    	//y2=cmd.z;
     }
   this.setPlayerCommand(cmd); 
   }
@@ -389,10 +500,24 @@ protected boolean interact(EntityPlayer player)
   }
 
 public int itemToCash(ItemStack coins) {
-	if(coins.getItem()==Item.getItemById(266)) {
-		return coins.stackSize;
+	if(coins == null) {return 0;}
+	//values: copper = 1, silver = 10, gold = 100
+	Item c = coins.getItem();
+	int i = Item.getIdFromItem(c);
+	if(c==Items.gold_ingot) {
+		return coins.stackSize * 1000;
+	}else if(i==5188) {
+		return coins.stackSize * 1;
+	}else if (i==5189) {
+		return coins.stackSize * 10;
+	}else if (i==5190) {
+		return coins.stackSize * 100;
 	}
 	return 0;
+}
+
+public void setCash(int i) {
+	cash = i;
 }
 
 public void addItemStack(InventoryBackpack storage, ItemStack stack) {
@@ -418,21 +543,78 @@ public void removeItems(InventoryBasic inv, ItemStack stack) {
 	inv.markDirty();
 }
 
+public void buyNeeds(List<NpcTrader> traderList) {
+	for(INeed n : needs) {
+		if(n.getAmount()<=n.getThreshold()) {
+			withdraw(traderList, n);
+		}
+	}
+}
+
+public NpcTrader getTrader(List<NpcTrader> traderList, INeed need) {
+	//Collections.sort(traderList, new SortByDistance(this));
+	return traderList.get(0);
+	/*
+	 * for(NpcTrader t : traderList) { if(t != null) { trader = t; break; } }
+	 */
+	//if(trader == null) {return false;}
+}
+
+public POTrade getTrade(NpcTrader trader, INeed need) {
+	POTradeList tradeListP = trader.getTradeList();
+	if(tradeListP==null) {return null;}
+	List<POTrade>tradeList = tradeListP.getTradeList();
+	Collections.sort(tradeList, Collections.reverseOrder(new SortByValue()));
+	return tradeList.get(0);
+}
+
+public void withdraw(List<NpcTrader> traderList, INeed need) {
+	NpcTrader trader = getTrader(traderList, need);
+	POTrade trade = getTrade(trader, need);
+	if(trade == null) {return;}
+	
+	for(ItemStack stack : trade.getCompactOutput()) {
+		if(stack != null) {
+			if(!trader.hasSufficient(stack, stack.stackSize)) {
+				return;
+			}
+		}
+	}
+	int sum = 0;
+	for(ItemStack stack : trade.getCompactInput()) {
+		sum += itemToCash(stack);
+	}
+	if(sum > cash) {return;}
+
+	if(!trader.canStore(trade.getCompactInput())) {
+		return;
+	}
+
+	for(ItemStack stack : trade.getCompactOutput()) {
+		if(stack != null) {
+			trader.removeItems(stack, stack.stackSize);
+			setFoodRemaining(getFoodRemaining() + AncientWarfareNPC.statics.getFoodValue(stack));
+		}
+	}
+
+	//for(ItemStack stack : trade.getCompactInput()) {
+	//trader.addItems(stack);
+	//}
+	for(int i=0; i<9; i++) {
+		ItemStack stack = trade.getInputStack(i);
+		cash -= this.itemToCash(stack);
+		if(stack != null) {
+			trader.addItems(stack);
+		}
+	}
+}
+
 public boolean withdrawFood(List<NpcTrader> traderList){
 	int amount = getUpkeepAmount() - getFoodRemaining();
 	if(amount<=0){return true;}
 	  
-	//IEntitySelector selector = new IEntitySelector();
-	//double dist=50; 
-	//AxisAlignedBB bb = boundingBox.expand(dist, dist/2, dist);
-	//List<NpcTrader> traderList = worldObj.getEntitiesWithinAABB(NpcTrader.class, bb);
-	//List<NpcTrader> traderList = NpcTrader.getTraderList();
-	//Collections.sort(traderList, new SortByDistance(this));
 	NpcTrader trader = traderList.get(0);
-		/*
-		 * for(NpcTrader t : traderList) { if(t != null) { trader = t; break; } }
-		 */
-	//if(trader == null) {return false;}
+
 	POTradeList tradeListP = trader.getTradeList();
 	if(tradeListP==null) {return false;}
 	List<POTrade>tradeList = tradeListP.getTradeList();
@@ -455,9 +637,14 @@ public boolean withdrawFood(List<NpcTrader> traderList){
 				}
 			}
 		}
-
-		if(!trader.canStore(trade.getCompactOutput())) {
-			//return false;
+		int sum = 0;
+		for(ItemStack stack : trade.getCompactInput()) {
+			sum += itemToCash(stack);
+		}
+		if(sum > cash) {return false;}
+		
+		if(!trader.canStore(trade.getCompactInput())) {
+			return false;
 		}
 		
 		for(ItemStack stack : trade.getCompactOutput()) {
@@ -466,8 +653,15 @@ public boolean withdrawFood(List<NpcTrader> traderList){
 				setFoodRemaining(getFoodRemaining() + AncientWarfareNPC.statics.getFoodValue(stack));
 			}
 		}
-		for(ItemStack stack : trade.getCompactInput()) {
-			trader.addItems(stack);
+		//for(ItemStack stack : trade.getCompactInput()) {
+			//trader.addItems(stack);
+		//}
+		for(int i=0; i<9; i++) {
+			ItemStack stack = trade.getInputStack(i);
+			cash -= this.itemToCash(stack);
+			if(stack != null) {
+				trader.addItems(stack);
+			}
 		}
 	 }
 	if(getFoodRemaining() >= getUpkeepAmount()) {
@@ -476,6 +670,18 @@ public boolean withdrawFood(List<NpcTrader> traderList){
 	return false;
  }	
 
+public void initNeeds() {
+	
+}
+
+public void addNeed() {
+	
+}
+
+public void removeNeed() {
+	
+}
+
 @Override
 public void openGUI(EntityPlayer player)
   {
@@ -483,11 +689,13 @@ public void openGUI(EntityPlayer player)
   }
 
 @Override
-public void onLivingUpdate()
-  {  
-  super.onLivingUpdate();
-  if(foodValueRemaining>0){foodValueRemaining--;}
-  }
+public void onLivingUpdate(){  
+	super.onLivingUpdate();
+	if(timeToPayday>0) {timeToPayday--;}
+	for(INeed n : needs) {
+		n.update();
+	}
+}
 
 @Override
 public void travelToDimension(int par1)

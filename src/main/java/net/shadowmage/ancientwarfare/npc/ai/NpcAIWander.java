@@ -15,8 +15,9 @@ public NpcAIWander(NpcBase npc, double par2)
 @Override
 public boolean shouldExecute()
   {
-  if(!npc.getIsAIEnabled() || npc.shouldBeAtHome()){return false;}
-  return super.shouldExecute();
+return false;
+//  if(!npc.getIsAIEnabled() || npc.shouldBeAtHome()){return false;}
+  //return super.shouldExecute();
   }
 
 @Override
