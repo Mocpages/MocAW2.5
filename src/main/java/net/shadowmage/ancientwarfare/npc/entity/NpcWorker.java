@@ -26,7 +26,9 @@ import net.shadowmage.ancientwarfare.core.util.BlockPosition;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAIFleeHostiles;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAIFollowPlayer;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAIMoveHome;
+import net.shadowmage.ancientwarfare.npc.ai.NpcAISeekWife;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAIWander;
+import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedFarm;
 import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedFindWorksite;
 import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedFollowCommand;
 import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedGetFood;
@@ -55,17 +57,31 @@ public NpcWorker(World par1World)
   this.tasks.addTask(3, new NpcAIFleeHostiles(this));
   this.tasks.addTask(4, new NpcAIPlayerOwnedGetFood(this));  
   this.tasks.addTask(5, new NpcAIPlayerOwnedIdleWhenHungry(this)); 
-  this.tasks.addTask(6, (workAI = new NpcAIPlayerOwnedWork(this)));
-  this.tasks.addTask(7, (workRandomAI = new NpcAIPlayerOwnedWorkRandom(this)));
+  //this.tasks.addTask(6, (workAI = new NpcAIPlayerOwnedWork(this)));
+  //this.tasks.addTask(7, (workRandomAI = new NpcAIPlayerOwnedWorkRandom(this)));
   this.tasks.addTask(8, new NpcAIMoveHome(this, 50.f, 3.f, 30.f, 3.f));
   
   //post-100 -- used by delayed shared tasks (look at random stuff, wander)
   this.tasks.addTask(101, new EntityAIWatchClosest2(this, EntityPlayer.class, 3.0F, 1.0F));
   this.tasks.addTask(102, new NpcAIWander(this, 0.625D));
   this.tasks.addTask(103, new EntityAIWatchClosest(this, EntityLiving.class, 8.0F));
-  
-  this.targetTasks.addTask(0, new NpcAIPlayerOwnedFindWorksite(this));
+  this.tasks.addTask(104, new NpcAIPlayerOwnedFarm(this));
+  this.targetTasks.addTask(105, new NpcAISeekWife(this));
+  //this.targetTasks.addTask(0, new NpcAIPlayerOwnedFindWorksite(this));
   }
+
+@Override
+public void addNeeds() {
+	return;
+}
+
+@Override
+public void onLivingUpdate() {
+	super.onLivingUpdate();
+	super.setFoodRemaining(10000);
+	super.setCash(100000);
+	age = 5040000;
+}
 
 @Override
 public String getNpcSubType()
@@ -184,16 +200,21 @@ public void onOrdersInventoryChanged()
 public void readEntityFromNBT(NBTTagCompound tag)
   {  
   super.readEntityFromNBT(tag);
-  if(tag.hasKey("workAI")){workAI.readFromNBT(tag.getCompoundTag("workAI"));}
-  if(tag.hasKey("workRandomAI")){workRandomAI.readFromNBT(tag.getCompoundTag("workRandomAI"));}
+//  if(tag.hasKey("workAI")){workAI.readFromNBT(tag.getCompoundTag("workAI"));}
+  //if(tag.hasKey("workRandomAI")){workRandomAI.readFromNBT(tag.getCompoundTag("workRandomAI"));}
   }
 
 @Override
 public void writeEntityToNBT(NBTTagCompound tag)
   {
   super.writeEntityToNBT(tag);
-  tag.setTag("workAI", workAI.writeToNBT(new NBTTagCompound()));
-  tag.setTag("workRandomAI", workRandomAI.writeToNBT(new NBTTagCompound()));
+  //tag.setTag("workAI", workAI.writeToNBT(new NBTTagCompound()));
+  //tag.setTag("workRandomAI", workRandomAI.writeToNBT(new NBTTagCompound()));
   }
+
+public boolean canPlant() {
+	//TODO
+	return false;
+}
 
 }

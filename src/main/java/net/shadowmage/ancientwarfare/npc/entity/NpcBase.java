@@ -63,10 +63,18 @@ public ItemStack upkeepStack;
 
 private boolean aiEnabled = true;
 
+public static final int MATURITY_AGE = 5040000;
+
 private int attackDamage = -1;//faction based only
 private int armorValue = -1;//faction based only
 private int maxHealthOverride = -1;
 private String customTexRef = "";//might as well allow for player-owned as well...
+
+public boolean isMale;
+public boolean isChild;
+public int age;
+//float scaleHeight = (float) (Utilities.getNumberInRange(rand, 0.03F, 0.09F), WatcherIDsHuman.HEIGHT, dataWatcherEx);
+//float scaleGirth = (float) (Utilities.getNumberInRange(rand, -0.03F, 0.05F), WatcherIDsHuman.GIRTH, dataWatcherEx);
 
 public NpcBase(World par1World)
   {
@@ -78,6 +86,9 @@ public NpcBase(World par1World)
   this.equipmentDropChances = new float[]{1.f, 1.f, 1.f, 1.f, 1.f};
   this.width = 0.6f;
   this.func_110163_bv();//set persistence required==true
+	age = 0;
+	isChild = true;
+	isMale = Math.random() >= 0.5;
   }
 
 public boolean isPayday() {
@@ -268,6 +279,13 @@ public PathNavigate getNavigator()
 @Override
 public void onEntityUpdate()
   {
+   age++;
+   if(isChild && age >= MATURITY_AGE) { //3.5 days
+	   isChild = false;
+   }else if (age >= 20160000) { //14 days
+	   setDead(); 
+
+   }
   /**
    * this is pushOutOfBlocks ... 
    * need to test how well it works for an npc (perhaps drop sand on their head?)
@@ -871,7 +889,9 @@ public void readEntityFromNBT(NBTTagCompound tag)
   attackDamage = tag.getInteger("attackDamageOverride");
   armorValue = tag.getInteger("armorValueOverride");
   customTexRef = tag.getString("customTex");
-  
+  age = tag.getInteger("age");
+  isMale = tag.getBoolean("isMale");
+  isChild = tag.getBoolean("isChild");
   //TODO remove these when I figure out why JSON reads an empty string as ""
   if("\"\"".equals(customTexRef)){customTexRef="";}
   if("\"\"".equals(getCustomNameTag())){setCustomNameTag("");}
@@ -895,6 +915,9 @@ public void writeEntityToNBT(NBTTagCompound tag)
   tag.setInteger("attackDamageOverride", attackDamage);
   tag.setInteger("armorValueOverride", armorValue);  
   tag.setString("customTex", customTexRef);
+  tag.setInteger("age", age);
+  tag.setBoolean("isMale", isMale);
+  tag.setBoolean("isChild", isChild);
   //TODO
   }
 

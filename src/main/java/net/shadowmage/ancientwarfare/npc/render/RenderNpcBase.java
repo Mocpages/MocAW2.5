@@ -46,13 +46,29 @@ public RenderNpcBase()
   super(new ModelBiped(), 0.6f);
   }
 
+
+@Override
+protected void preRenderCallback(EntityLivingBase entityLivingBase, float partialTickTime) {
+	NpcBase npc = (NpcBase)entityLivingBase;
+	    if(npc.isChild) {
+			  float growth = (npc.isMale ? 0.39F : 0.37F) / 5040000 * npc.age;
+	    	 //float growth = 0.38F * (npc.age/1000);
+			 // float scale = npc.isMale ? 0.9375F : 0.915F;
+			  float scale = 0.55F + growth;
+			  scale /= 2.5;
+			  GL11.glScalef(scale, scale + npc.height, scale);
+			  //scale *= 2;
+			  GL11.glScalef(scale + npc.width, scale, scale + npc.width);
+		  }
+}
+
 @Override
 public void doRender(Entity par1Entity, double x, double y, double z, float par8, float par9)
   {  
+	NpcBase npc = (NpcBase)par1Entity;
   super.doRender(par1Entity, x, y, z, par8, par9);
   EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 
-  NpcBase npc = (NpcBase)par1Entity;
   if(npc.isHostileTowards(player))
     {
     if(AWNPCStatics.renderHostileNames.getBoolean())

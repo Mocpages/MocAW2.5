@@ -33,12 +33,14 @@ import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedRideHorse;
 import net.shadowmage.ancientwarfare.npc.config.AWNPCStatics;
 import net.shadowmage.ancientwarfare.npc.container.ContainerNpcPlayerOwnedTrade;
 import net.shadowmage.ancientwarfare.npc.entity.faction.NpcFaction;
+import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
 import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
 import net.shadowmage.ancientwarfare.npc.needs.INeed;
 import net.shadowmage.ancientwarfare.npc.needs.NeedHelper;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.Command;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.CommandType;
 import net.shadowmage.ancientwarfare.npc.orders.UpkeepOrder;
+import net.shadowmage.ancientwarfare.npc.tile.LandGrant;
 import net.shadowmage.ancientwarfare.npc.tile.TileTownHall;
 import net.shadowmage.ancientwarfare.npc.trade.POTrade;
 import net.shadowmage.ancientwarfare.npc.trade.POTradeList;
@@ -62,14 +64,17 @@ public int x2 = 0;
 public int y2 = 0;
 public int cx = 0;
 public int cy = 0;
+private NpcPlayerOwned spouse;
+private List<NpcPlayerOwned> suitors;
+List<NpcPlayerOwned> children;
 
 private BlockPosition townHallPosition;
 private BlockPosition upkeepAutoBlock;
 
-public NpcPlayerOwned(World par1World)
-  {
+public NpcPlayerOwned(World par1World){
   super(par1World);
-  //invBack.setInventorySlotContents(0, new ItemStack(Items.gold_ingot, 64));
+  children = new ArrayList<NpcPlayerOwned>();
+  suitors = new ArrayList<NpcPlayerOwned>();
   addNeeds();
   }
 
@@ -77,6 +82,7 @@ public void addNeeds() {
 	needs.add(NeedHelper.starchNeed(this));
 	needs.add(NeedHelper.textilesNeed(this));
 	needs.add(NeedHelper.fuelNeed(this));
+	if(!isMale) {setSuitors(new ArrayList<NpcPlayerOwned>());}
 }
 
 public void setP(int a, int b) {
@@ -238,6 +244,7 @@ public TileTownHall getTownHall()
 @Override
 public void handleTownHallBroadcast(TileTownHall tile, BlockPosition position)
   {
+	//setCustomNameTag("Broadcast recieved");
   validateTownHallPosition();
   BlockPosition pos = getTownHallPosition();
   if(pos!=null)
@@ -246,6 +253,7 @@ public void handleTownHallBroadcast(TileTownHall tile, BlockPosition position)
     double newDist = getDistanceSq(position.x+0.5d, position.y, position.z+0.5d);
     if(newDist<curDist)
       {
+      setCustomNameTag("Set TH");
       setTownHallPosition(position);
       if(upkeepAutoBlock==null || upkeepAutoBlock.equals(pos))
         {
@@ -255,6 +263,7 @@ public void handleTownHallBroadcast(TileTownHall tile, BlockPosition position)
     }
   else
     {
+	  setCustomNameTag("set TH");
     setTownHallPosition(position);
     if(upkeepAutoBlock==null || upkeepAutoBlock.equals(pos))
       {
@@ -490,6 +499,12 @@ protected boolean interact(EntityPlayer player)
         this.followingPlayerName = player.getCommandSenderName();      
         }
       }
+    else if(player.getCurrentEquippedItem()!= null && this.getTownHall() != null){ //player rclicked with land grant!
+    	//setCustomNameTag("Aaaa");
+    	if(player.getCurrentEquippedItem().getItem()==AWNpcItemLoader.scanner) {
+    		this.getTownHall().grantLand(this, player.getCurrentEquippedItem());
+    	}
+    }
     else
       {
       openGUI(player);
@@ -697,6 +712,8 @@ public void onLivingUpdate(){
 	}
 }
 
+
+
 @Override
 public void travelToDimension(int par1)
   {
@@ -706,24 +723,55 @@ public void travelToDimension(int par1)
   }
 
 @Override
-public void readEntityFromNBT(NBTTagCompound tag)
-  {  
+public void readEntityFromNBT(NBTTagCompound tag){  
   super.readEntityFromNBT(tag);
   foodValueRemaining = tag.getInteger("foodValue");
   if(tag.hasKey("command")){playerIssuedCommand = new Command(tag.getCompoundTag("command"));} 
   if(tag.hasKey("townHall")){townHallPosition = new BlockPosition(tag.getCompoundTag("townHall"));}
   if(tag.hasKey("upkeepPos")){upkeepAutoBlock = new BlockPosition(tag.getCompoundTag("upkeepPos"));}
   onWeaponInventoryChanged();
-  }
+}
 
 @Override
-public void writeEntityToNBT(NBTTagCompound tag)
-  {  
+public void writeEntityToNBT(NBTTagCompound tag){  
   super.writeEntityToNBT(tag);
   tag.setInteger("foodValue", foodValueRemaining);
   if(playerIssuedCommand!=null){tag.setTag("command", playerIssuedCommand.writeToNBT(new NBTTagCompound()));}
   if(townHallPosition!=null){tag.setTag("townHall", townHallPosition.writeToNBT(new NBTTagCompound()));}
   if(upkeepAutoBlock!=null){tag.setTag("upkeepPos", upkeepAutoBlock.writeToNBT(new NBTTagCompound()));}
-  }
+}
+
+public NpcPlayerOwned getSpouse() {
+	return spouse;
+}
+
+public void setSpouse(NpcPlayerOwned spouse) {
+	this.spouse = spouse;
+}
+
+public void addSuitor(NpcPlayerOwned npc) {
+	suitors.add(npc);
+	
+}
+
+public List<NpcPlayerOwned> getSuitors() {
+	return suitors;
+}
+
+public void setSuitors(List<NpcPlayerOwned> suitors) {
+	this.suitors = suitors;
+}
+
+public int getLandArea() {
+	if(getTownHall() == null) {return Integer.MIN_VALUE;}
+	if(getTownHall().getOwnedLands(this) == null) {return Integer.MIN_VALUE;}
+	if (getTownHall().getOwnedLands(this).isEmpty()) {return Integer.MIN_VALUE;}
+	
+	int area = 0;
+	for(LandGrant plot : getTownHall().getOwnedLands(this)) {
+		area += plot.getArea();
+	}
+	return area;
+}
 
 }

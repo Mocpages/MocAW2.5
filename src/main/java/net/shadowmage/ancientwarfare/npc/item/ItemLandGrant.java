@@ -1,4 +1,4 @@
-package net.shadowmage.ancientwarfare.structure.item;
+package net.shadowmage.ancientwarfare.npc.item;
 
 import java.io.File;
 import java.util.List;
@@ -18,6 +18,7 @@ import net.shadowmage.ancientwarfare.core.interfaces.IItemKeyInterface;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
 import net.shadowmage.ancientwarfare.core.util.BlockTools;
+import net.shadowmage.ancientwarfare.structure.item.ItemStructureSettings;
 import net.shadowmage.ancientwarfare.structure.template.StructureTemplate;
 import net.shadowmage.ancientwarfare.structure.template.StructureTemplateManager;
 import net.shadowmage.ancientwarfare.structure.template.build.validation.StructureValidationType;
@@ -26,13 +27,13 @@ import net.shadowmage.ancientwarfare.structure.template.load.TemplateLoader;
 import net.shadowmage.ancientwarfare.structure.template.save.TemplateExporter;
 import net.shadowmage.ancientwarfare.structure.template.scan.TemplateScanner;
 
-public class ItemStructureScanner extends Item implements IItemKeyInterface, IItemClickable
+public class ItemLandGrant extends Item implements IItemKeyInterface, IItemClickable
 {
 
-public ItemStructureScanner(String localizationKey)
+public ItemLandGrant(String localizationKey)
   {
   this.setUnlocalizedName(localizationKey); 
-  this.setCreativeTab(AWStructuresItemLoader.structureTab);
+  this.setCreativeTab(AWNpcItemLoader.npcTab);
   this.setMaxStackSize(1);
   this.setTextureName("ancientwarfare:structure/"+localizationKey);
   }
@@ -100,29 +101,8 @@ public void onRightClick(EntityPlayer player, ItemStack stack)
       return;
       }
     player.addChatMessage(new ChatComponentText("Initiating Scan"));
-    NetworkHandler.INSTANCE.openGui(player, NetworkHandler.GUI_SCANNER, 0, 0, 0);
+    NetworkHandler.INSTANCE.openGui(player, NetworkHandler.GUI_GRANT, 0, 0, 0);
     } 
-  }
-
-public static boolean scanStructure(World world, BlockPosition pos1, BlockPosition pos2, BlockPosition key, int face, String name, boolean include, NBTTagCompound tag)
-  {
-  BlockPosition min = BlockTools.getMin(pos1, pos2);
-  BlockPosition max = BlockTools.getMax(pos1, pos2);
-  TemplateScanner scanner = new TemplateScanner();
-  int turns = face==0 ? 2 : face==1 ? 1 : face==2 ? 0 : face==3 ? 3 : 0; //because for some reason my mod math was off?  
-  StructureTemplate template = scanner.scan(world, min, max, key, turns, name);
-
-  String validationType = tag.getString("validationType");
-  StructureValidationType type = StructureValidationType.getTypeFromName(validationType);
-  StructureValidator validator = type.getValidator();
-  validator.readFromNBT(tag);  
-  template.setValidationSettings(validator);
-  if(include)
-    {
-    StructureTemplateManager.instance().addTemplate(template);    
-    }
-  TemplateExporter.exportTo(template, new File(include ? TemplateLoader.includeDirectory : TemplateLoader.outputDirectory));
-  return true;
   }
 
 @Override

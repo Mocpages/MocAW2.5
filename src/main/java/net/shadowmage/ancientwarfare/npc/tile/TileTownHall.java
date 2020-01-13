@@ -2,10 +2,12 @@ package net.shadowmage.ancientwarfare.npc.tile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
@@ -17,10 +19,15 @@ import net.shadowmage.ancientwarfare.core.interfaces.IOwnable;
 import net.shadowmage.ancientwarfare.core.inventory.InventoryBasic;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
+import net.shadowmage.ancientwarfare.core.util.BlockTools;
 import net.shadowmage.ancientwarfare.core.util.InventoryTools;
+import net.shadowmage.ancientwarfare.core.util.WorldTools;
 import net.shadowmage.ancientwarfare.npc.container.ContainerTownHall;
 import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 import net.shadowmage.ancientwarfare.npc.item.ItemNpcSpawner;
+import net.shadowmage.ancientwarfare.structure.item.ItemStructureSettings;
+import net.shadowmage.ancientwarfare.npc.item.ItemLandGrant;
+
 
 public class TileTownHall extends TileEntity implements IOwnable, IInventory, IInteractableTile
 {
@@ -29,6 +36,7 @@ private String ownerName = "";
 private int broadcastRange = 80;//TODO set from config and/or gui?
 private int updateDelayTicks = 0;
 private int updateDelayMaxTicks = 20*5;//5 second broadcast frequency  TODO set from config
+private ArrayList<LandGrant> lands = new ArrayList<LandGrant>();
 
 private List<NpcDeathEntry> deathNotices = new ArrayList<TileTownHall.NpcDeathEntry>();
 
@@ -121,19 +129,25 @@ public String getOwnerName()
   }
 
 @Override
-public void readFromNBT(NBTTagCompound tag)
-  {
-  super.readFromNBT(tag);
-  ownerName = tag.getString("owner");
-  InventoryTools.readInventoryFromNBT(inventory, tag.getCompoundTag("inventory"));  
-  NBTTagList entryList = tag.getTagList("deathNotices", Constants.NBT.TAG_COMPOUND);
-  NpcDeathEntry entry;
-  for(int i = 0;i < entryList.tagCount(); i++)
-    {
-    entry = new NpcDeathEntry(entryList.getCompoundTagAt(i));
-    deathNotices.add(entry);
-    }
-  }
+public void readFromNBT(NBTTagCompound tag){
+	super.readFromNBT(tag);
+	ownerName = tag.getString("owner");
+	InventoryTools.readInventoryFromNBT(inventory, tag.getCompoundTag("inventory"));  
+	NBTTagList entryList = tag.getTagList("deathNotices", Constants.NBT.TAG_COMPOUND);
+	NpcDeathEntry entry;
+	for(int i = 0;i < entryList.tagCount(); i++)
+	{
+		entry = new NpcDeathEntry(entryList.getCompoundTagAt(i));
+		deathNotices.add(entry);
+	}
+
+	NBTTagList landsList = tag.getTagList("lands", Constants.NBT.TAG_COMPOUND);
+	LandGrant grant;
+	for(int i = 0;i < landsList.tagCount(); i++) {
+		grant = new LandGrant(landsList.getCompoundTagAt(i), this);
+		lands.add(grant);
+	}
+}
 
 @Override
 public void writeToNBT(NBTTagCompound tag)
@@ -147,6 +161,12 @@ public void writeToNBT(NBTTagCompound tag)
     entryList.appendTag(entry.writeToNBT(new NBTTagCompound()));
     }
   tag.setTag("deathNotices", entryList);
+  
+  NBTTagList landsList = new NBTTagList();
+  for(LandGrant grant : lands) {
+	  landsList.appendTag(grant.writeToNBT(new NBTTagCompound()));
+  }
+  tag.setTag("lands", landsList);
   }
 
 @Override
@@ -246,4 +266,29 @@ public List<NpcDeathEntry> getDeathList()
   return deathNotices;
   }
 
+public void grantLand(NpcPlayerOwned npc, ItemStack item) {
+	npc.setCustomNameTag("Grantland called!");
+    ItemStructureSettings viewSettings = new ItemStructureSettings();
+    ItemStructureSettings.getSettingsFor(item, viewSettings);
+    
+    BlockPosition pos1 = viewSettings.pos1();
+    BlockPosition pos2 = viewSettings.pos2();
+    LandGrant grant = new LandGrant(pos1, pos2, 0.0F, npc, this);
+    for(LandGrant g : lands) {
+    	if(g.collidesWith(grant)){return;}
+    }
+    lands.add(grant);
+    npc.setCustomNameTag("land granted!");
+}
+
+public ArrayList<LandGrant> getOwnedLands(NpcPlayerOwned p){
+	ArrayList<LandGrant> output = new ArrayList<LandGrant>();
+	for(LandGrant g : lands) {
+		if(g.getOwner() == p) {
+			output.add(g);
+		}
+	}
+	if(output.size() == 0) {return null;}
+	return output;
+}
 }

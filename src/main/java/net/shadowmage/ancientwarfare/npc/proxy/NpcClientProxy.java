@@ -17,6 +17,7 @@ import net.shadowmage.ancientwarfare.core.config.ConfigManager;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
 import net.shadowmage.ancientwarfare.core.util.TextureImageBased;
 import net.shadowmage.ancientwarfare.npc.AncientWarfareNPC;
+import net.shadowmage.ancientwarfare.npc.gui.GuiLandGrant;
 import net.shadowmage.ancientwarfare.npc.config.AWNPCStatics;
 import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
 import net.shadowmage.ancientwarfare.npc.entity.NpcMedieval;
@@ -64,9 +65,11 @@ public void registerClient()
   NetworkHandler.registerGui(NetworkHandler.GUI_NPC_TRADE_ORDER, GuiTradeOrder.class);
   NetworkHandler.registerGui(NetworkHandler.GUI_NPC_PLAYER_OWNED_TRADE, GuiNpcPlayerOwnedTrade.class);
   NetworkHandler.registerGui(NetworkHandler.GUI_NPC_FACTION_BARD, GuiNpcFactionBard.class);
+  NetworkHandler.registerGui(NetworkHandler.GUI_GRANT, GuiLandGrant.class);
+
   
   RenderingRegistry.registerEntityRenderingHandler(NpcBase.class, new RenderNpcBase());
-  RenderingRegistry.registerEntityRenderingHandler(NpcMedieval.class, new RenderNpcMed());
+  //RenderingRegistry.registerEntityRenderingHandler(NpcMedieval.class, new RenderNpcMed());
 
   
   MinecraftForge.EVENT_BUS.register(RenderWorkLines.INSTANCE);//register render for orders items routes/block highlights

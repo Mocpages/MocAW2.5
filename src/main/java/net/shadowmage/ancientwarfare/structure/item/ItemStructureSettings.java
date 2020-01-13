@@ -30,7 +30,7 @@ public class ItemStructureSettings
 boolean[] setKeys = new boolean[4];
 BlockPosition pos1;
 BlockPosition pos2;
-BlockPosition key;
+private BlockPosition key;
 int buildFace;
 String name;
 
@@ -38,7 +38,7 @@ public ItemStructureSettings()
   {
   pos1 = new BlockPosition();
   pos2 = new BlockPosition();
-  key = new BlockPosition();
+  setKey(new BlockPosition());
   }
 
 /**
@@ -72,7 +72,7 @@ public static ItemStructureSettings getSettingsFor(ItemStack stack, ItemStructur
     }
   if(tag.hasKey("buildKey"))
     {
-    settings.key.read(tag.getCompoundTag("buildKey"));
+    settings.getKey().read(tag.getCompoundTag("buildKey"));
     settings.setKeys[2] = true;
     settings.buildFace = tag.getCompoundTag("buildKey").getInteger("face");
     }
@@ -102,7 +102,7 @@ public static void setSettingsFor(ItemStack item, ItemStructureSettings settings
   if(settings.setKeys[2])
     {
     NBTTagCompound tag1 = new NBTTagCompound();
-    settings.key.writeToNBT(tag1);
+    settings.getKey().writeToNBT(tag1);
     tag1.setInteger("face", settings.buildFace);
     tag.setTag("buildKey", tag1);
     }  
@@ -127,7 +127,7 @@ public void setPos2(int x, int y, int z)
 
 public void setBuildKey(int x, int y, int z, int face)
   {
-  key.reassign(x, y, z);
+  getKey().reassign(x, y, z);
   buildFace = face;
   setKeys[2] = true;
   }
@@ -170,7 +170,7 @@ public BlockPosition pos2()
 
 public BlockPosition buildKey()
   {
-  return key;
+  return getKey();
   }
 
 public int face()
@@ -190,5 +190,13 @@ public void clearSettings()
     this.setKeys[i] = false;
     }
   }
+
+public BlockPosition getKey() {
+	return key;
+}
+
+public void setKey(BlockPosition key) {
+	this.key = key;
+}
 
 }

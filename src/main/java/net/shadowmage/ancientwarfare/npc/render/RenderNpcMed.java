@@ -43,8 +43,8 @@ public class RenderNpcMed extends RenderBiped
 
 	public RenderNpcMed()
 	  {
-	  super(new ModelNpc(0.6f), 0.6f);
-	  }
+		super(new ModelBiped(), 0.6f);
+	}
 
 	@Override
 	public void doRender(Entity par1Entity, double x, double y, double z, float par8, float par9)

@@ -30,6 +30,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
 import net.shadowmage.ancientwarfare.core.util.BlockTools;
 import net.shadowmage.ancientwarfare.core.util.RenderTools;
+import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
 import net.shadowmage.ancientwarfare.structure.item.AWStructuresItemLoader;
 import net.shadowmage.ancientwarfare.structure.item.ItemBlockStructureBuilder;
 import net.shadowmage.ancientwarfare.structure.item.ItemConstructionTool;
@@ -70,7 +71,7 @@ public void handleRenderLastEvent(RenderWorldLastEvent evt)
     {
     return;
     }
-  if(item==AWStructuresItemLoader.scanner)
+  if(item==AWStructuresItemLoader.scanner || item==AWNpcItemLoader.scanner)
     {
     renderScannerBoundingBox(player, stack, evt.partialTicks);
     }  

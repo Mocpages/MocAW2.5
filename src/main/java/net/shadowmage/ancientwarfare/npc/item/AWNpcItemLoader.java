@@ -52,11 +52,13 @@ public static final ItemShield stoneShield = new ItemShield("stone_shield", Tool
 public static final ItemShield ironShield = new ItemShield("iron_shield", ToolMaterial.IRON);
 public static final ItemShield goldShield = new ItemShield("gold_shield", ToolMaterial.GOLD);
 public static final ItemShield diamondShield = new ItemShield("diamond_shield", ToolMaterial.EMERALD);
+public static final ItemLandGrant scanner = new ItemLandGrant("land_grant");
 
 private static final TabSorter sorter = new TabSorter();
   
 public static void load()
   {
+  GameRegistry.registerItem(scanner, "land_grant");
   GameRegistry.registerItem(npcSpawner, "npc_spawner");  
   GameRegistry.registerItem(workOrder, "work_order");
   GameRegistry.registerItem(upkeepOrder, "upkeep_order");
