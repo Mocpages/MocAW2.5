@@ -38,6 +38,8 @@ public ItemLandGrant(String localizationKey)
   this.setTextureName("ancientwarfare:structure/"+localizationKey);
   }
 
+
+
 @Override
 public boolean cancelRightClick(EntityPlayer player, ItemStack stack)
   {
@@ -50,57 +52,40 @@ public boolean cancelLeftClick(EntityPlayer player, ItemStack stack)
   return false;
   }
 
-ItemStructureSettings viewSettings = new ItemStructureSettings();
+ItemNPCSettings viewSettings = new ItemNPCSettings();
 @SuppressWarnings({ "unchecked", "rawtypes" })
 @Override
-public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List list, boolean par4)
-  { 
-  if(par1ItemStack!=null)
-    {
-    ItemStructureSettings.getSettingsFor(par1ItemStack, viewSettings);
+public void addInformation(ItemStack par1ItemStack, EntityPlayer par2EntityPlayer, List list, boolean par4){ 
+  if(par1ItemStack!=null){
+    ItemNPCSettings.getSettingsFor(par1ItemStack, viewSettings, par2EntityPlayer.worldObj);
     String key = InputHandler.instance().getKeybindBinding(InputHandler.KEY_ALT_ITEM_USE_0);
-    if(viewSettings.hasPos1() && viewSettings.hasPos2() && viewSettings.hasBuildKey())
+    if(viewSettings.hasPos1() && viewSettings.hasPos2())
       {
       list.add(key+" = "+StatCollector.translateToLocal("guistrings.structure.scanner.click_to_process"));
-      list.add("(4/4)");
+      list.add("(3/3)");
       }        
     else if(!viewSettings.hasPos1())
       {
       list.add(key+" = "+StatCollector.translateToLocal("guistrings.structure.scanner.select_first_pos"));
-      list.add("(1/4)");
+      list.add("(1/3)");
       }
     else if(!viewSettings.hasPos2())
       {
       list.add(key+" = "+StatCollector.translateToLocal("guistrings.structure.scanner.select_second_pos"));
-      list.add("(2/4)");
+      list.add("(2/3)");
       }
-    else if(!viewSettings.hasBuildKey())
-      {
-      list.add(key+" = "+StatCollector.translateToLocal("guistrings.structure.scanner.select_offset"));
-      list.add("(3/4)");
-      }    
     }  
   }
 
-ItemStructureSettings scanSettings = new ItemStructureSettings();
+ItemNPCSettings scanSettings = new ItemNPCSettings();
 @Override
 public void onRightClick(EntityPlayer player, ItemStack stack)
   {
-  ItemStructureSettings.getSettingsFor(stack, scanSettings);
-  if(player.isSneaking())
-    {
+  ItemNPCSettings.getSettingsFor(stack, scanSettings, player.worldObj);
+  if(player.isSneaking()){
     scanSettings.clearSettings();
-    ItemStructureSettings.setSettingsFor(stack, scanSettings);
-    }
-  else if(scanSettings.hasPos1() && scanSettings.hasPos2() && scanSettings.hasBuildKey())
-    {
-    BlockPosition key = scanSettings.getKey();
-    if(player.getDistance(key.x+0.5d, key.y, key.z+0.5d) > 10)
-      {
-      player.addChatMessage(new ChatComponentText("You are too far away to scan that building, move closer to chosen build-key position"));
-      return;
-      }
-    player.addChatMessage(new ChatComponentText("Initiating Scan"));
+    ItemNPCSettings.setSettingsFor(stack, scanSettings);
+  }else if(scanSettings.hasPos1() && scanSettings.hasPos2()){
     NetworkHandler.INSTANCE.openGui(player, NetworkHandler.GUI_GRANT, 0, 0, 0);
     } 
   }
@@ -120,27 +105,22 @@ public void onKeyAction(EntityPlayer player, ItemStack stack, ItemKey key)
     }
   BlockPosition hit = BlockTools.getBlockClickedOn(player, player.worldObj, player.isSneaking());
   if(hit==null){return;}
-  ItemStructureSettings.getSettingsFor(stack, scanSettings);
-  if(scanSettings.hasPos1() && scanSettings.hasPos2() && scanSettings.hasBuildKey())
+  ItemNPCSettings.getSettingsFor(stack, scanSettings, player.worldObj);
+  if(scanSettings.hasPos1() && scanSettings.hasPos2())
     {
     player.addChatMessage(new ChatComponentTranslation("guistrings.structure.scanner.click_to_process"));
     }
   else if(!scanSettings.hasPos1())
     {
-    scanSettings.setPos1(hit.x, hit.y, hit.z);
+    scanSettings.setPos1(new BlockPosition(hit.x, hit.y, hit.z));
     player.addChatMessage(new ChatComponentTranslation("guistrings.structure.scanner.set_first_pos"));
     }
   else if(!scanSettings.hasPos2())
     {
-    scanSettings.setPos2(hit.x, hit.y, hit.z);
+    scanSettings.setPos2(new BlockPosition(hit.x, hit.y, hit.z));
     player.addChatMessage(new ChatComponentTranslation("guistrings.structure.scanner.set_second_pos"));
     }
-  else if(!scanSettings.hasBuildKey())
-    {
-    scanSettings.setBuildKey(hit.x, hit.y, hit.z, BlockTools.getPlayerFacingFromYaw(player.rotationYaw));
-    player.addChatMessage(new ChatComponentTranslation("guistrings.structure.scanner.set_offset_pos"));
-    }
-  ItemStructureSettings.setSettingsFor(stack, scanSettings);
+  ItemNPCSettings.setSettingsFor(stack, scanSettings);
   }
 
 @Override

@@ -11,6 +11,7 @@ import net.shadowmage.ancientwarfare.core.gui.elements.Button;
 import net.shadowmage.ancientwarfare.core.gui.elements.CompositeScrolled;
 import net.shadowmage.ancientwarfare.core.gui.elements.Label;
 import net.shadowmage.ancientwarfare.core.gui.elements.Line;
+import net.shadowmage.ancientwarfare.npc.tile.LandGrant;
 import net.shadowmage.ancientwarfare.npc.tile.TileTownHall.NpcDeathEntry;
 
 public class GuiTownHallDeathList extends GuiContainerBase
@@ -47,10 +48,17 @@ public void setupElements()
   {
   area.clearElements();
   List<NpcDeathEntry> deathList = parent.container.getDeathList();
+  List<LandGrant> grants = parent.container.getLands();
   int totalHeight = 8;
   
   Label label;
   String labelText;
+  for(LandGrant g : grants) {
+	  labelText = g.getOwner().getCustomNameTag();
+	  label = new Label(8, totalHeight, labelText);
+	  area.addGuiElement(label);
+	  totalHeight+=12;
+  }
   for(NpcDeathEntry entry : deathList)
     {
     labelText = StatCollector.translateToLocal("guistrings.npc.npc_name");

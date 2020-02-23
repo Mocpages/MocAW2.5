@@ -16,10 +16,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemTool;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.scoreboard.Team;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 import net.shadowmage.ancientwarfare.core.interfaces.IWorkSite;
 import net.shadowmage.ancientwarfare.core.interfaces.IWorkSite.WorkType;
 import net.shadowmage.ancientwarfare.core.interfaces.IWorker;
+import net.shadowmage.ancientwarfare.core.inventory.InventoryBackpack;
 import net.shadowmage.ancientwarfare.core.item.ItemHammer;
 import net.shadowmage.ancientwarfare.core.item.ItemQuill;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
@@ -37,6 +39,7 @@ import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedRideHorse;
 import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedWork;
 import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedWorkRandom;
 import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
+import net.shadowmage.ancientwarfare.npc.tile.TileTownHall;
 
 public class NpcWorker extends NpcPlayerOwned implements IWorker
 {
@@ -44,6 +47,9 @@ public class NpcWorker extends NpcPlayerOwned implements IWorker
 public BlockPosition autoWorkTarget;
 private NpcAIPlayerOwnedWork workAI;
 private NpcAIPlayerOwnedWorkRandom workRandomAI;
+public NpcInventory inv = new NpcInventory();
+public NpcInventory invUntaxed = new NpcInventory();
+
 
 public NpcWorker(World par1World)
   {
@@ -55,8 +61,8 @@ public NpcWorker(World par1World)
   this.tasks.addTask(2, new NpcAIFollowPlayer(this));
   this.tasks.addTask(2, new NpcAIPlayerOwnedFollowCommand(this));
   this.tasks.addTask(3, new NpcAIFleeHostiles(this));
-  this.tasks.addTask(4, new NpcAIPlayerOwnedGetFood(this));  
-  this.tasks.addTask(5, new NpcAIPlayerOwnedIdleWhenHungry(this)); 
+ // this.tasks.addTask(4, new NpcAIPlayerOwnedGetFood(this));  
+  //this.tasks.addTask(5, new NpcAIPlayerOwnedIdleWhenHungry(this)); 
   //this.tasks.addTask(6, (workAI = new NpcAIPlayerOwnedWork(this)));
   //this.tasks.addTask(7, (workRandomAI = new NpcAIPlayerOwnedWorkRandom(this)));
   this.tasks.addTask(8, new NpcAIMoveHome(this, 50.f, 3.f, 30.f, 3.f));
@@ -81,6 +87,14 @@ public void onLivingUpdate() {
 	super.setFoodRemaining(10000);
 	super.setCash(100000);
 	age = 5040000;
+}
+
+@Override
+public void onDeath(DamageSource source) {
+	  if(!worldObj.isRemote) {
+		  inv.onDeath(this.worldObj,this.posX,this.posY,this.posZ);
+	  }
+	  super.onDeath(source);  
 }
 
 @Override
@@ -200,6 +214,7 @@ public void onOrdersInventoryChanged()
 public void readEntityFromNBT(NBTTagCompound tag)
   {  
   super.readEntityFromNBT(tag);
+  inv.readFromNBT(tag);
 //  if(tag.hasKey("workAI")){workAI.readFromNBT(tag.getCompoundTag("workAI"));}
   //if(tag.hasKey("workRandomAI")){workRandomAI.readFromNBT(tag.getCompoundTag("workRandomAI"));}
   }
@@ -208,6 +223,7 @@ public void readEntityFromNBT(NBTTagCompound tag)
 public void writeEntityToNBT(NBTTagCompound tag)
   {
   super.writeEntityToNBT(tag);
+  inv.writeToNBT(tag);
   //tag.setTag("workAI", workAI.writeToNBT(new NBTTagCompound()));
   //tag.setTag("workRandomAI", workRandomAI.writeToNBT(new NBTTagCompound()));
   }

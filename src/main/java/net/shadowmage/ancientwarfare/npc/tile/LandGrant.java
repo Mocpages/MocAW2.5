@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
@@ -17,15 +19,18 @@ import net.shadowmage.ancientwarfare.npc.entity.NpcWorker;
 
 public class LandGrant{
 	private BlockPosition pos1, pos2;
-	private float corvee;
+	private float corvee,rent,tithe;
     private AxisAlignedBB aa;
     private NpcPlayerOwned owner;
     private TileTownHall townHall;
     private World worldObj;
     public ArrayList<BlockPosition> blocksToTill, blocksToHarvest, blocksToPlant, blocksToWork;
     private int work;
+    private int owner_id;
+    long idmsb;
+    long idlsb;
     
-	LandGrant(BlockPosition p1, BlockPosition p2, Float c, NpcPlayerOwned o, TileTownHall t){
+	LandGrant(BlockPosition p1, BlockPosition p2, float c, float r, float t2, NpcPlayerOwned o, TileTownHall t){
 		  blocksToTill = new ArrayList<BlockPosition>();
 		  blocksToHarvest = new ArrayList<BlockPosition>();
 		  blocksToPlant = new ArrayList<BlockPosition>();
@@ -33,6 +38,8 @@ public class LandGrant{
 		pos1 = p1;
 		pos2 = p2;
 		corvee = c;
+		rent = r;
+		tithe = t2;
 		aa = AxisAlignedBB.getBoundingBox(pos1.x, 0, pos1.z, pos2.x, 255, pos2.z);
 		townHall = t;
 		setOwner(o);
@@ -49,37 +56,41 @@ public class LandGrant{
 	}
 	
 	public NBTBase writeToNBT(NBTTagCompound tag) {
-		tag.setFloat("x1", pos1.x);
-		tag.setFloat("y1", pos1.y);
-		tag.setFloat("z1", pos1.z);
-		tag.setFloat("x2", pos2.x);
-		tag.setFloat("y2", pos2.y);
-		tag.setFloat("z2", pos2.z);
+		tag.setTag("pos1", pos1.writeToNBT(new NBTTagCompound()));
+		tag.setTag("pos2", pos2.writeToNBT(new NBTTagCompound()));
 		tag.setFloat("corvee", corvee);
+		tag.setFloat("tithe", tithe);
+		tag.setFloat("rent", rent);
 		UUID id = getOwner().getUniqueID();
 		tag.setLong("idmsb", id.getMostSignificantBits());
 		tag.setLong("idlsb", id.getLeastSignificantBits());
 		tag.setInteger("tx", townHall.xCoord);
 		tag.setInteger("ty", townHall.yCoord);
 		tag.setInteger("tz", townHall.zCoord);
+		tag.setInteger("id", owner.getEntityId());
 		return tag;
 	}
 
 	private void readFromNBT(NBTTagCompound tag, TileTownHall t) {
-		float x1 = tag.getFloat("x1");
-		float y1 = tag.getFloat("y1");
-		float z1 = tag.getFloat("z1");
-		float x2 = tag.getFloat("x2");
-		float y2 = tag.getFloat("y2");
-		float z2 = tag.getFloat("z2");
 		corvee = tag.getFloat("corvee");
-		pos1 = new BlockPosition(x1, y1, z1);
-		pos2 = new BlockPosition(x2, y2, z2);
+		tithe = tag.getFloat("tithe");
+		rent = tag.getFloat("rent");
+		pos1 = new BlockPosition(tag.getCompoundTag("pos1"));
+		pos2 = new BlockPosition(tag.getCompoundTag("pos2"));
 		aa = AxisAlignedBB.getBoundingBox(pos1.x, 0, pos1.z, pos2.x, 255, pos2.z);
-		long idmsb = tag.getLong("idmsb");
-		long idlsb = tag.getLong("idlsb");
+		idmsb = tag.getLong("idmsb");
+		idlsb = tag.getLong("idlsb");
 		townHall = t;
-		worldObj = t.getWorldObj();
+		worldObj = MinecraftServer.getServer().getEntityWorld();
+		//owner_id = tag.getInteger("id");
+		//owner = (NpcPlayerOwned) worldObj.getEntityByID(tag.getInteger("id"));
+		//if(worldObj == null) {throw new IllegalArgumentException("FUCK OFF");}
+		//setOwner((NpcPlayerOwned) WorldTools.getEntityByUUID(worldObj, idmsb, idlsb));
+		//owner.setCustomNameTag("Loaded!");
+	}
+	
+	public void updateOwner() {
+		//owner = (NpcPlayerOwned) worldObj.getEntityByID(owner_id);
 		setOwner((NpcPlayerOwned) WorldTools.getEntityByUUID(worldObj, idmsb, idlsb));
 	}
 
@@ -101,7 +112,7 @@ public class LandGrant{
 	}
 	
 	public void scanAll() {
-		owner.setCustomNameTag("Scanning!");
+		//owner.setCustomNameTag("Scanning!");
 		BlockPosition min = BlockTools.getMin(pos1, pos2);
 		BlockPosition max = BlockTools.getMax(pos1, pos2);
 		BlockPosition scanner;
@@ -125,22 +136,20 @@ public class LandGrant{
 		//owner.setCustomNameTag("x:"+position.x +" y:"+position.y + " z:"+position.z);
 		Block block = worldObj.getBlock(position.x, y-1, position.z);
 		Block c = worldObj.getBlock(position.x, y, position.z);
-		//blocksToTill.add(new BlockPosition(position.x, position.y-1, position.z));
 		if (c==Blocks.wheat || c==Blocks.carrots || c==Blocks.potatoes) {
-			owner.setCustomNameTag("Meta: " + worldObj.getBlockMetadata(position.x, y, position.z));
 			if(worldObj.getBlockMetadata(position.x, y, position.z)>=7){
-				owner.setCustomNameTag("Adding Block to harvest List!");
 				blocksToHarvest.add(position);
 				return;
 			}
+		}
 		if(block==Blocks.dirt || block==Blocks.grass){
-			owner.setCustomNameTag("Adding Block to Tilled List!");
 			blocksToTill.add(new BlockPosition(position.x, position.y-1, position.z));
-		}else if(block==Blocks.farmland){
+		}
+		if(block==Blocks.farmland){
 			blocksToPlant.add(position);
+			
 		}else{
 			blocksToWork.add(position);
-			}
 		}
 	}
 	
@@ -154,6 +163,14 @@ public class LandGrant{
 	
 	public int getWork() {
 		return work;
+	}
+	
+	public float getTithe() {
+		return tithe;
+	}
+	
+	public float getRent() {
+		return rent;
 	}
 	
 	private BlockPosition getFirstDirt(ArrayList<BlockPosition> a) {

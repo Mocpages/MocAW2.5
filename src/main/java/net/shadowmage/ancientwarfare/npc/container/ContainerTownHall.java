@@ -12,6 +12,7 @@ import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraftforge.common.util.Constants;
 import net.shadowmage.ancientwarfare.core.container.ContainerBase;
+import net.shadowmage.ancientwarfare.npc.tile.LandGrant;
 import net.shadowmage.ancientwarfare.npc.tile.TileTownHall;
 import net.shadowmage.ancientwarfare.npc.tile.TileTownHall.NpcDeathEntry;
 
@@ -21,6 +22,8 @@ public class ContainerTownHall extends ContainerBase
 public TileTownHall townHall;
 
 List<NpcDeathEntry> deathList = new ArrayList<NpcDeathEntry>();
+List<LandGrant> grantList = new ArrayList<LandGrant>();
+
 
 public ContainerTownHall(EntityPlayer player, int x, int y, int z)
   {
@@ -41,6 +44,7 @@ public ContainerTownHall(EntityPlayer player, int x, int y, int z)
     if(!player.worldObj.isRemote)
       {
       deathList.addAll(townHall.getDeathList());
+      grantList.addAll(townHall.getLands());
       townHall.addViewer(this);
       }
     }
@@ -105,6 +109,10 @@ public List<NpcDeathEntry> getDeathList()
   {
   return deathList;
   }
+
+public List<LandGrant> getLands(){
+	return grantList;
+}
 
 @Override
 public ItemStack transferStackInSlot(EntityPlayer par1EntityPlayer, int slotClickedIndex)

@@ -35,7 +35,7 @@ public class NpcAISeekWife extends NpcAI {
 	}
 	
 	private void seekHusbando() {
-		npc.setCustomNameTag("Female");
+		//npc.setCustomNameTag("Female");
 		waitTime++;
 		if(waitTime >= 60) {
 			List<NpcPlayerOwned> suitors = npc.getSuitors();
@@ -50,7 +50,7 @@ public class NpcAISeekWife extends NpcAI {
 	}
 
 	public void seekWaifu() {
-		npc.setCustomNameTag("Male");
+		//npc.setCustomNameTag("Male");
 		waitTime++;
 		if(waitTime <= 200) {
 			int range = 255;
@@ -63,12 +63,12 @@ public class NpcAISeekWife extends NpcAI {
 				}
 			}
 		}else {
-			npc.setCustomNameTag("Groom");
+		//	npc.setCustomNameTag("Groom");
 			List<NpcPlayerOwned> suitors = npc.getSuitors();
 			Collections.sort(suitors, new SortForMarriage());
 			if(!suitors.isEmpty()) {
 				npc.setSpouse(suitors.get(0));
-				npc.getSpouse().setCustomNameTag("Bride");
+				//npc.getSpouse().setCustomNameTag("Bride");
 				npc.getSpouse().setSpouse(npc);
 			}
 		}

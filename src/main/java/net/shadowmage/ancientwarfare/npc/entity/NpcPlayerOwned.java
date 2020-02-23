@@ -35,6 +35,7 @@ import net.shadowmage.ancientwarfare.npc.container.ContainerNpcPlayerOwnedTrade;
 import net.shadowmage.ancientwarfare.npc.entity.faction.NpcFaction;
 import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
 import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
+import net.shadowmage.ancientwarfare.npc.item.ItemNPCSettings;
 import net.shadowmage.ancientwarfare.npc.needs.INeed;
 import net.shadowmage.ancientwarfare.npc.needs.NeedHelper;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.Command;
@@ -500,9 +501,12 @@ protected boolean interact(EntityPlayer player)
         }
       }
     else if(player.getCurrentEquippedItem()!= null && this.getTownHall() != null){ //player rclicked with land grant!
-    	//setCustomNameTag("Aaaa");
     	if(player.getCurrentEquippedItem().getItem()==AWNpcItemLoader.scanner) {
     		this.getTownHall().grantLand(this, player.getCurrentEquippedItem());
+    		this.setCustomNameTag("Granted land!");
+    		ItemNPCSettings scanSettings = new ItemNPCSettings();
+    		ItemNPCSettings.getSettingsFor(player.getCurrentEquippedItem(), scanSettings, player.worldObj);
+    		scanSettings.setOwner(this);
     	}
     }
     else

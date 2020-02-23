@@ -5,9 +5,11 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
+import net.shadowmage.ancientwarfare.core.util.InventoryTools;
 import net.shadowmage.ancientwarfare.npc.ai.NpcAI;
 import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
 import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
@@ -25,6 +27,7 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	int ticksAtWork;
 	LandGrant curPlot;
 	boolean planting;
+	float taxCounter;
 
 	public NpcAIPlayerOwnedFarm(NpcBase npc){
 	  super(npc);
@@ -35,6 +38,7 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	  worker = (NpcWorker)npc;
 	  init = false;
 	  planting = false;
+	  taxCounter = 0;
 	  this.setMutexBits(MOVE+ATTACK);
 	  }
 	
@@ -66,7 +70,7 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	
 	@Override
 	public void updateTask() {
-		planting = false;
+		//planting = false;
 		SeasonSavedData seasonData = SeasonHandler.getSeasonSavedData(worker.worldObj);
         SeasonTime seasonTime = new SeasonTime(seasonData.seasonCycleTicks);
 		Season s = seasonTime.getSeason();
@@ -103,8 +107,10 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	}
 	
 	private void plant() {
+		worker.setCustomNameTag("P l  a  n   t");
 		BlockPosition pos = getNextPos();
 		if(pos==null) {
+			worker.setCustomNameTag("ah fuck here we go again");
 			return;
 		}
 		double dist = npc.getDistanceSq(pos.x, pos.y, pos.z);
@@ -120,6 +126,18 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 			work_plant(pos);
 		}
 	}
+	
+	public void work_plant(BlockPosition pos) {
+		npc.setCustomNameTag("Planting: " + ticksAtWork);
+		ticksAtWork++;
+		Block b = worker.worldObj.getBlock(pos.x, pos.y-1, pos.z);
+		if(ticksAtWork>=60 && b == Blocks.farmland) {
+			ticksAtWork = 0;
+			curPlot.blocksToPlant.remove(pos);
+			worker.worldObj.setBlock(pos.x, pos.y+1, pos.z, Blocks.wheat);
+		}
+	}
+	
 	
 	private void weed() {
 		npc.setCustomNameTag("Weeding: " + ticksAtWork);
@@ -151,12 +169,24 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	
 	private void work_harvest(BlockPosition pos) {
 		ticksAtWork++;
-		npc.setCustomNameTag("Harvesting: " + ticksAtWork);
+		//npc.setCustomNameTag("Harvesting: " + ticksAtWork);
 		Block b = worker.worldObj.getBlock(pos.x, pos.y, pos.z);
 		if(ticksAtWork>=60 && b == Blocks.wheat) {
 			ticksAtWork = 0;
 			curPlot.blocksToHarvest.remove(pos);
 			List<ItemStack> stacks = b.getDrops(worker.worldObj, pos.x, pos.y, pos.z, 1, 1);
+			float taxRate = 100F / (float)curPlot.getTithe();
+			worker.setCustomNameTag("tax rate: " + taxRate);
+			for(ItemStack s : stacks) {
+				taxCounter++;
+				if(taxCounter < taxRate) {
+					//taxCounter += s.stackSize;
+					worker.inv.addItem(Item.getIdFromItem(s.getItem()), s.stackSize);
+				}else {
+					taxCounter -= taxRate;
+					worker.getTownHall().addItem(s);
+				}
+			}
 			worker.worldObj.setBlock(pos.x, pos.y, pos.z, Blocks.air);
 			worker.worldObj.setBlock(pos.x, pos.y-1, pos.z, Blocks.dirt);
 		}
@@ -169,6 +199,9 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 				continue;
 			}
 			plot.scanAll();
+			if(planting) {
+				return plot.blocksToPlant.get(0);
+			}
 			if(plot.blocksToTill != null && !plot.blocksToTill.isEmpty()) {
 				return plot.blocksToTill.get(0);
 			}else if(plot.blocksToPlant != null && !plot.blocksToPlant.isEmpty()) {
@@ -194,27 +227,20 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	}
 	
 	public void work(BlockPosition pos) {
-		npc.setCustomNameTag("Working: " + ticksAtWork);
+		//npc.setCustomNameTag("Working: " + ticksAtWork);
 		ticksAtWork++;
 		Block b = worker.worldObj.getBlock(pos.x, pos.y, pos.z);
 		if(ticksAtWork>=60 && b == Blocks.grass || b == Blocks.dirt) {
 			ticksAtWork = 0;
 			curPlot.blocksToTill.remove(pos);
 			worker.worldObj.setBlock(pos.x, pos.y, pos.z, Blocks.farmland);
-		}
-	}
-	
-	public void work_plant(BlockPosition pos) {
-		npc.setCustomNameTag("Planting: " + ticksAtWork);
-		ticksAtWork++;
-		Block b = worker.worldObj.getBlock(pos.x, pos.y, pos.z);
-		if(ticksAtWork>=60 && b == Blocks.farmland) {
+		}else if(ticksAtWork>100) {
 			ticksAtWork = 0;
-			curPlot.blocksToPlant.remove(pos);
-			worker.worldObj.setBlock(pos.x, pos.y+1, pos.z, Blocks.wheat);
+			planting = true;
 		}
 	}
 	
+
 	@Override
 	public void startExecuting(){
 	  lands = worker.getTownHall().getOwnedLands(worker);

@@ -21,6 +21,7 @@ import net.shadowmage.ancientwarfare.npc.gui.GuiLandGrant;
 import net.shadowmage.ancientwarfare.npc.config.AWNPCStatics;
 import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
 import net.shadowmage.ancientwarfare.npc.entity.NpcMedieval;
+import net.shadowmage.ancientwarfare.npc.gui.GuiCity;
 import net.shadowmage.ancientwarfare.npc.gui.GuiCombatOrder;
 import net.shadowmage.ancientwarfare.npc.gui.GuiNpcBard;
 import net.shadowmage.ancientwarfare.npc.gui.GuiNpcCreativeControls;
@@ -36,11 +37,13 @@ import net.shadowmage.ancientwarfare.npc.gui.GuiUpkeepOrder;
 import net.shadowmage.ancientwarfare.npc.gui.GuiWorkOrder;
 import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
 import net.shadowmage.ancientwarfare.npc.render.RenderCommandOverlay;
+import net.shadowmage.ancientwarfare.npc.render.RenderLandGrantBounds;
 import net.shadowmage.ancientwarfare.npc.render.RenderNpcBase;
 import net.shadowmage.ancientwarfare.npc.render.RenderNpcMed;
 import net.shadowmage.ancientwarfare.npc.render.RenderShield;
 import net.shadowmage.ancientwarfare.npc.render.RenderWorkLines;
 import net.shadowmage.ancientwarfare.npc.skin.NpcSkinManager;
+import net.shadowmage.ancientwarfare.structure.event.StructureBoundingBoxRenderer;
 import cpw.mods.fml.client.config.DummyConfigElement.DummyCategoryElement;
 import cpw.mods.fml.client.config.IConfigElement;
 import cpw.mods.fml.client.registry.RenderingRegistry;
@@ -66,6 +69,8 @@ public void registerClient()
   NetworkHandler.registerGui(NetworkHandler.GUI_NPC_PLAYER_OWNED_TRADE, GuiNpcPlayerOwnedTrade.class);
   NetworkHandler.registerGui(NetworkHandler.GUI_NPC_FACTION_BARD, GuiNpcFactionBard.class);
   NetworkHandler.registerGui(NetworkHandler.GUI_GRANT, GuiLandGrant.class);
+  NetworkHandler.registerGui(NetworkHandler.GUI_CITY, GuiCity.class);
+
 
   
   RenderingRegistry.registerEntityRenderingHandler(NpcBase.class, new RenderNpcBase());
@@ -75,6 +80,8 @@ public void registerClient()
   MinecraftForge.EVENT_BUS.register(RenderWorkLines.INSTANCE);//register render for orders items routes/block highlights
   FMLCommonHandler.instance().bus().register(RenderCommandOverlay.INSTANCE);//register overlay renderer
   MinecraftForge.EVENT_BUS.register(RenderCommandOverlay.INSTANCE);//register block/entity highlight renderer
+  MinecraftForge.EVENT_BUS.register(RenderLandGrantBounds.instance());
+
   
   RenderShield shieldRender = new RenderShield();
   MinecraftForgeClient.registerItemRenderer(AWNpcItemLoader.woodenShield, shieldRender);
