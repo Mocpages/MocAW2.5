@@ -205,10 +205,7 @@ public boolean isPayday() {
 }
 
 public void addToInv(ItemStack i) {
-	//System.out.println("aa");
-	//i.stackSize = 64;
 	InventoryTools.mergeItemStack(invBack, i, 0);
-	//System.out.println("Adding");
 }
 
 public InventoryBackpack getInv() {
@@ -231,6 +228,7 @@ public int getCash() {
 
 @Override
 public boolean takePay(IInventory inventory, int side) {
+	//entire function decremented, ignore
 	 int amount = getUpkeepAmount() - cash;
 	  if(amount<=0){return true;}
 	  ItemStack stack;
@@ -286,6 +284,7 @@ public boolean takePay(IInventory inventory, int side) {
 @Override
 public void onDeath(DamageSource source)
   {
+	//TODO - drop inventory
   if(!worldObj.isRemote)
     {
     if(horseAI!=null)
@@ -663,8 +662,7 @@ public void removeItems(InventoryBasic inv, ItemStack stack) {
 }
 
 
-
-public NpcTrader getTrader(List<NpcTrader> traderList, INeed need) {
+public NpcTrader getTrader(List<NpcTrader> traderList, INeed need) { //DECREMENTED - ignore
 	//Collections.sort(traderList, new SortByDistance(this));
 	return traderList.get(0);
 	/*
@@ -673,7 +671,7 @@ public NpcTrader getTrader(List<NpcTrader> traderList, INeed need) {
 	//if(trader == null) {return false;}
 }
 
-public POTrade getTrade(NpcTrader trader, INeed need) {
+public POTrade getTrade(NpcTrader trader, INeed need) {//DECREMENTED - ignore
 	POTradeList tradeListP = trader.getTradeList();
 	if(tradeListP==null) {return null;}
 	List<POTrade>tradeList = tradeListP.getTradeList();
@@ -681,7 +679,7 @@ public POTrade getTrade(NpcTrader trader, INeed need) {
 	return tradeList.get(0);
 }
 
-public void withdraw(List<NpcTrader> traderList, INeed need) {
+public void withdraw(List<NpcTrader> traderList, INeed need) {//DECREMENTED - ignore
 	NpcTrader trader = getTrader(traderList, need);
 	POTrade trade = getTrade(trader, need);
 	if(trade == null) {return;}
@@ -722,7 +720,7 @@ public void withdraw(List<NpcTrader> traderList, INeed need) {
 	}
 }
 
-public boolean withdrawFood(List<NpcTrader> traderList){
+public boolean withdrawFood(List<NpcTrader> traderList){//DECREMENTED - ignore
 	int amount = getUpkeepAmount() - getFoodRemaining();
 	if(amount<=0){return true;}
 	  
@@ -818,39 +816,29 @@ public TileCity getCity() {
 @Override
 public void onLivingUpdate(){  
 	super.onLivingUpdate();
-	//System.out.println("fucking fuck fuck fuck " + needs.size());
 	//if(timeToPayday>0) {timeToPayday--;}
 	timeToPayday--;
 	
 	for(INeed n : needs) {
-		//System.out.println("Doing something");
 		n.update();
 		if(n.getAmount()<=n.getThreshold()) {
-			//System.out.println("Doing another hting");
 			buyNeeds();
 		}
 	}
-	//int i = this.sumMoney();
-	//if(i>0) {
-		//System.out.println("Money: " + i);
-//	}
 }
 
 public void buyNeeds() {
+	//TODO split this into sub-functions, this is kind of awful 
 	if(getTownHall() == null || getTownHall().city == null) {return;}
 	for(INeed n : needs) {
 		NeedBase n2 = (NeedBase)n;
-		//System.out.println("aaa");
 		if(n.getAmount()<=n.getThreshold()) {
-			//System.out.println("yet");
-			//withdraw(traderList, n);
 			TileCity c = getTownHall().city;
 			if(c!=null) {
 				for(Enumeration k = n2.getNeeds().keys(); k.hasMoreElements();) {
 					ItemStack i = new ItemStack(Item.getItemById((Integer) k.nextElement()));
 					int price = c.getHighestBuy(i.getItem()) + 100;
 					this.remMoney(100);
-					//setCustomNameTag("Added buy!" + price);
 					if(price <= this.sumMoney()) {
 						BuyOrder b = c.getBuy(this, i);
 						if(b!=null) {
