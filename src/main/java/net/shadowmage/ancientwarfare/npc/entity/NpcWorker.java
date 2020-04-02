@@ -77,11 +77,6 @@ public NpcWorker(World par1World)
   }
 
 @Override
-public void addNeeds() {
-	return;
-}
-
-@Override
 public void onLivingUpdate() {
 	super.onLivingUpdate();
 	super.setFoodRemaining(10000);

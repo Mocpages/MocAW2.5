@@ -473,6 +473,8 @@ private void initializeCustomHealthValues()
   healthValues.put("trader", healthConfig.get(npcDefaultHealthSettings, "trader", 20).getInt(20));
   healthValues.put("priest", healthConfig.get(npcDefaultHealthSettings, "priest", 20).getInt(20));
   healthValues.put("bard", healthConfig.get(npcDefaultHealthSettings, "bard", 20).getInt(20));
+  healthValues.put("noble", healthConfig.get(npcDefaultHealthSettings, "noble", 20).getInt(20));
+
   }
 
 public int getMaxHealthFor(String type)

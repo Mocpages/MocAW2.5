@@ -123,6 +123,7 @@ public void preInit(FMLPreInitializationEvent evt)
   NetworkHandler.registerContainer(NetworkHandler.GUI_NPC_FACTION_BARD, ContainerNpcFactionBard.class);
   NetworkHandler.registerContainer(NetworkHandler.GUI_GRANT, ContainerLandGrant.class);
   NetworkHandler.registerContainer(NetworkHandler.GUI_CITY, ContainerCity.class);
+  NetworkHandler.registerContainer(NetworkHandler.GUI_CITY_MARKET, ContainerCity.class);
   PacketBase.registerPacketType(NetworkHandler.PACKET_NPC_COMMAND, PacketNpcCommand.class);
   PacketBase.registerPacketType(NetworkHandler.PACKET_FACTION_UPDATE, PacketFactionUpdate.class);
 

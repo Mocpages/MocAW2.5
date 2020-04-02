@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -27,6 +28,7 @@ import net.shadowmage.ancientwarfare.core.util.WorldTools;
 import net.shadowmage.ancientwarfare.npc.container.ContainerTownHall;
 import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 import net.shadowmage.ancientwarfare.npc.item.ItemNpcSpawner;
+import net.shadowmage.ancientwarfare.npc.orders.UpkeepOrder;
 import net.shadowmage.ancientwarfare.structure.item.ItemStructureSettings;
 import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
 import net.shadowmage.ancientwarfare.npc.item.ItemLandGrant;
@@ -48,7 +50,9 @@ public class TileTownHall extends TileEntity implements IOwnable, IInventory, II
 
 	private List<ContainerTownHall> viewers = new ArrayList<ContainerTownHall>();
 	private boolean updated;
-
+	public BlockPosition cityPos;
+	public TileCity city;
+	
 	@Override
 	public boolean canUpdate()
 	{
@@ -68,11 +72,24 @@ public class TileTownHall extends TileEntity implements IOwnable, IInventory, II
 		updateDelayTicks--;
 		if(updateDelayTicks<=0)
 		{
+			ItemStack i = inventory.getStackInSlot(0);
+			if(i!=null) {
+				if(i.getItem() == AWNpcItemLoader.upkeepOrder) {
+					UpkeepOrder upkeepOrder = UpkeepOrder.getUpkeepOrder(i);
+					cityPos = upkeepOrder.getUpkeepPosition();
+					TileEntity te = worldObj.getTileEntity(cityPos.x, cityPos.y, cityPos.z);
+					if(te instanceof TileCity){
+						city = (TileCity)te;
+					}
+				}
+			}
 			broadcast();
 			updateDelayTicks = updateDelayMaxTicks;
 		}
 	}
-
+	
+	
+	
 	public void addViewer(ContainerTownHall viewer)
 	{
 		if(!viewers.contains(viewer)){viewers.add(viewer);}
@@ -302,14 +319,20 @@ public class TileTownHall extends TileEntity implements IOwnable, IInventory, II
 	}
 	
 	public void addItem(ItemStack item){
+		int toAdd = item.stackSize;
 		for(int i = 0; i< 27; i++) {
 			ItemStack s = inventory.getStackInSlot(i);
 			if(s==null) {
 				inventory.setInventorySlotContents(i, item);
 				return;
 			}
-			if (s.getItem() == item.getItem() && s.getMaxStackSize()>s.stackSize) {
-				
+			if (s.getItem() == item.getItem() && s.getMaxStackSize() > s.stackSize) {
+				int newSize = Math.min(s.getMaxStackSize(), s.stackSize + toAdd);
+				toAdd -= (newSize - s.stackSize);
+				s.stackSize = newSize;
+			}
+			if(toAdd <= 0) {
+				return;
 			}
 		}
 	}

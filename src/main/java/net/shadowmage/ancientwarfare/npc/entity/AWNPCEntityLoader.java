@@ -113,15 +113,15 @@ private static void addPlayerOwnedNpcs()
     };
   addNpcRegistration(reg, "bard", "ancientwarfare:npc/spawner_bard");
   
-  reg = new NpcDeclaration(NpcCourier.class, AWEntityRegistry.NPC_MED, nextID++, AncientWarfareNPC.instance, 120, 3, true, "med")
+  reg = new NpcDeclaration(NpcNoble.class, AWEntityRegistry.NPC_NOBLE, nextID++, AncientWarfareNPC.instance, 120, 3, true, "noble")
   {
   @Override
   public Entity createEntity(World world)
     {
-    return new NpcMedieval(world);
+    return new NpcNoble(world);
     }
   };
-addNpcRegistration(reg, "med", "ancientwarfare:npc/spawner_medieval");
+addNpcRegistration(reg, "noble", "ancientwarfare:npc/spawner_noble");
   }
 
 private static void addBandits()

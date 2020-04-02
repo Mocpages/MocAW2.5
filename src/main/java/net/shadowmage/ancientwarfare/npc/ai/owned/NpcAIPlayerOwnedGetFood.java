@@ -120,7 +120,7 @@ public void buyItems() {
 	double dist =50; 
 	AxisAlignedBB bb = npc.boundingBox.expand(dist, dist/2, dist);
 	List<NpcTrader> traderList =npc.worldObj.selectEntitiesWithinAABB(NpcTrader.class, bb, selector);
-	((NpcPlayerOwned)npc).buyNeeds(traderList);
+	((NpcPlayerOwned)npc).buyNeeds();
 }
 
 /**

@@ -1,6 +1,8 @@
 package net.shadowmage.ancientwarfare.npc.needs;
 
 import net.minecraft.item.Item;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
 import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 
 public interface INeed {
@@ -22,4 +24,8 @@ public interface INeed {
 	public boolean shouldIdle();
 	
 	public void update();
+
+	public NBTBase writeToNBT(NBTTagCompound nbtTagCompound);
+
+	void readFromNBT(NBTTagCompound tag);
 }

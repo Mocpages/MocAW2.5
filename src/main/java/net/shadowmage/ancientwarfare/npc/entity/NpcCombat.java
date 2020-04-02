@@ -70,8 +70,8 @@ public NpcCombat(World par1World)
   this.tasks.addTask(0, (horseAI=new NpcAIPlayerOwnedRideHorse(this)));
   this.tasks.addTask(2, new NpcAIFollowPlayer(this));
   this.tasks.addTask(2, new NpcAIPlayerOwnedFollowCommand(this));
-  this.tasks.addTask(4, new NpcAIPlayerOwnedGetFood(this));
-  this.tasks.addTask(5, new NpcAIPlayerOwnedIdleWhenHungry(this));
+  //this.tasks.addTask(4, new NpcAIPlayerOwnedGetFood(this));
+  //this.tasks.addTask(5, new NpcAIPlayerOwnedIdleWhenHungry(this));
   //6--empty....
   //7==combat task, inserted from onweaponinventoryupdated
   this.tasks.addTask(8, new NpcAIMedicBase(this));

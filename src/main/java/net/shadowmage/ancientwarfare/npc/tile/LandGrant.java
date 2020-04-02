@@ -145,7 +145,7 @@ public class LandGrant{
 		if(block==Blocks.dirt || block==Blocks.grass){
 			blocksToTill.add(new BlockPosition(position.x, position.y-1, position.z));
 		}
-		if(block==Blocks.farmland){
+		if(block==Blocks.farmland && c != Blocks.wheat){ //TODO generalize
 			blocksToPlant.add(position);
 			
 		}else{

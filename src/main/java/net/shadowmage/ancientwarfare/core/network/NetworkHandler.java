@@ -92,6 +92,7 @@ public static final int GUI_SOUND_BLOCK = 48;
 public static final int GUI_NPC_FACTION_BARD = 49;
 public static final int GUI_GRANT = 50;
 public static final int GUI_CITY = 51;
+public static final int GUI_CITY_MARKET = 52;
 
 
 

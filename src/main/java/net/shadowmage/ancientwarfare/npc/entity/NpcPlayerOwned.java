@@ -2,7 +2,9 @@ package net.shadowmage.ancientwarfare.npc.entity;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.Random;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -15,11 +17,13 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 import net.minecraft.command.IEntitySelector;
 import net.shadowmage.ancientwarfare.core.config.AWLog;
 import net.shadowmage.ancientwarfare.core.inventory.InventoryBackpack;
@@ -37,11 +41,14 @@ import net.shadowmage.ancientwarfare.npc.item.AWNpcItemLoader;
 import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
 import net.shadowmage.ancientwarfare.npc.item.ItemNPCSettings;
 import net.shadowmage.ancientwarfare.npc.needs.INeed;
+import net.shadowmage.ancientwarfare.npc.needs.NeedBase;
 import net.shadowmage.ancientwarfare.npc.needs.NeedHelper;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.Command;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.CommandType;
 import net.shadowmage.ancientwarfare.npc.orders.UpkeepOrder;
+import net.shadowmage.ancientwarfare.npc.tile.BuyOrder;
 import net.shadowmage.ancientwarfare.npc.tile.LandGrant;
+import net.shadowmage.ancientwarfare.npc.tile.TileCity;
 import net.shadowmage.ancientwarfare.npc.tile.TileTownHall;
 import net.shadowmage.ancientwarfare.npc.trade.POTrade;
 import net.shadowmage.ancientwarfare.npc.trade.POTradeList;
@@ -51,7 +58,7 @@ import net.shadowmage.ancientwarfare.npc.trade.POTradeList;
 public abstract class NpcPlayerOwned extends NpcBase
 {
 
-private List<INeed> needs = new ArrayList<INeed>();
+protected List<INeed> needs = new ArrayList<INeed>();
 private Command playerIssuedCommand;//TODO load/save
 private int foodValueRemaining = 0;
 private int cash = 0;
@@ -77,18 +84,100 @@ public NpcPlayerOwned(World par1World){
   children = new ArrayList<NpcPlayerOwned>();
   suitors = new ArrayList<NpcPlayerOwned>();
   addNeeds();
+	ItemStack stack = new ItemStack(Item.getItemById(5303));
+	Random r = new Random();
+
+  stack.stackSize = r.nextInt(50);
+	invBack.setInventorySlotContents(1, stack);
+	
+
   }
 
 public void addNeeds() {
+	//System.out.println("adding needs");
 	needs.add(NeedHelper.starchNeed(this));
 	needs.add(NeedHelper.textilesNeed(this));
 	needs.add(NeedHelper.fuelNeed(this));
-	if(!isMale) {setSuitors(new ArrayList<NpcPlayerOwned>());}
+	needs.add(NeedHelper.vegNeed(this));
+	needs.add(NeedHelper.alcoholNeed(this));
+	needs.add(NeedHelper.protienNeed(this));
+	needs.add(NeedHelper.leatherNeed(this));
+	//System.out.println("Needs added " + needs.size());
+	//if(!isMale) {setSuitors(new ArrayList<NpcPlayerOwned>());}
 }
 
 public void setP(int a, int b) {
 	x1 = a;
 	y1 = b;
+}
+
+@Override
+public void writeToNBT(NBTTagCompound tag) {
+	super.writeToNBT(tag);
+//	System.out.println("WRITING NPC TO NBT");
+	NBTTagCompound t = invBack.writeToNBT(new NBTTagCompound());
+	tag.setTag("inv",t);
+	
+	NBTTagList buyList = new NBTTagList();
+	  for(INeed b : needs) {
+		  buyList.appendTag(b.writeToNBT(new NBTTagCompound()));
+	  }
+	//System.out.println("SUCCESSFULLY WROTE NPC TO NBT");
+}
+
+@Override
+public void readFromNBT(NBTTagCompound tag) {
+	super.readFromNBT(tag);
+	invBack.readFromNBT(tag.getCompoundTag("inv"));
+}
+
+public int sumMoney() {
+	//values: copper = 1, silver = 10, gold = 100
+	int sum = 0;
+	for(int i = 0; i <= invBack.getSizeInventory()-1; i++) {
+		//System.out.println(invBack.getStackInSlot(i).getDisplayName());
+		sum += this.itemToCash(invBack.getStackInSlot(i));
+	}
+	//System.out.println("Summing money: " + sum);
+	return sum;
+}
+
+public void getChange(ItemStack stack, int amt) {
+	int id = Item.getIdFromItem(stack.getItem());
+	if( id == 5303) { //gold
+		amt -= 100;
+		this.addToInv(new ItemStack(Item.getItemById(5302)));
+	}else { //silver
+		amt -= 10;
+		this.addToInv(new ItemStack(Item.getItemById(5301)));
+	}
+}
+
+public void remMoney(int amt) {
+	for(int i = 0; i <= invBack.getSizeInventory()-1; i++) {
+		ItemStack item = invBack.getStackInSlot(i);
+		int val = itemToCash(item); //total coin value of this entire slot
+		if(val > 0) { //if its worth money
+			int amtPer = itemToCash(new ItemStack(item.getItem())); //value of one coin in this stack
+			//System.out.println("Removing! " + amt);
+			if(val <= amt) { //we can delete the whole stack
+				amt -= val;//just do that
+				item = null;
+				invBack.setInventorySlotContents(i, null);
+			//	System.out.println("Deleting stack of " + item.stackSize + " " + item.getDisplayName());
+			}else if(amtPer > amt){ //get change
+				item.stackSize -= 1;
+				getChange(item,amt);
+			}else { //gotta delete just part of it
+				
+				int amtToDel = amt / amtPer; //number of coins we should delete
+				item.stackSize -= amtToDel; 
+				amt -= amtToDel;
+				//System.out.println("partial delete " + item.stackSize + " " + item.getDisplayName());
+			}
+		}
+		invBack.setInventorySlotContents(i,item);
+	}
 }
 
 public int getPX() {
@@ -113,6 +202,17 @@ public boolean isPayday() {
 	}else {
 		return false;
 	}
+}
+
+public void addToInv(ItemStack i) {
+	//System.out.println("aa");
+	//i.stackSize = 64;
+	InventoryTools.mergeItemStack(invBack, i, 0);
+	//System.out.println("Adding");
+}
+
+public InventoryBackpack getInv() {
+	return invBack;
 }
 
 public boolean idle() {
@@ -525,11 +625,11 @@ public int itemToCash(ItemStack coins) {
 	int i = Item.getIdFromItem(c);
 	if(c==Items.gold_ingot) {
 		return coins.stackSize * 1000;
-	}else if(i==5188) {
+	}else if(i==5301) { //copper
 		return coins.stackSize * 1;
-	}else if (i==5189) {
+	}else if (i==5302) { //silver
 		return coins.stackSize * 10;
-	}else if (i==5190) {
+	}else if (i==5303) {//gold
 		return coins.stackSize * 100;
 	}
 	return 0;
@@ -540,7 +640,7 @@ public void setCash(int i) {
 }
 
 public void addItemStack(InventoryBackpack storage, ItemStack stack) {
-	for(int i=0; i<=storage.getSizeInventory(); i++) {
+	for(int i=0; i<=storage.getSizeInventory()-1; i++) {
 		if(storage.getStackInSlot(i)== null || storage.getStackInSlot(i).isItemEqual(stack)) {
 			storage.setInventorySlotContents(i, stack);
 		}
@@ -562,13 +662,7 @@ public void removeItems(InventoryBasic inv, ItemStack stack) {
 	inv.markDirty();
 }
 
-public void buyNeeds(List<NpcTrader> traderList) {
-	for(INeed n : needs) {
-		if(n.getAmount()<=n.getThreshold()) {
-			withdraw(traderList, n);
-		}
-	}
-}
+
 
 public NpcTrader getTrader(List<NpcTrader> traderList, INeed need) {
 	//Collections.sort(traderList, new SortByDistance(this));
@@ -707,16 +801,75 @@ public void openGUI(EntityPlayer player)
   NetworkHandler.INSTANCE.openGui(player, NetworkHandler.GUI_NPC_INVENTORY, getEntityId(), 0, 0);  
   }
 
+public TileCity getCity() {
+	if(getTownHall()!=null) {
+		BlockPosition p = getTownHall().cityPos;
+		if(p!=null) {
+			TileEntity te = worldObj.getTileEntity(p.x, p.y, p.z);
+			if(te instanceof TileCity){
+				TileCity c = (TileCity)te;
+				return c;
+			}
+		}
+	}
+	return null;
+}
+
 @Override
 public void onLivingUpdate(){  
 	super.onLivingUpdate();
-	if(timeToPayday>0) {timeToPayday--;}
+	//System.out.println("fucking fuck fuck fuck " + needs.size());
+	//if(timeToPayday>0) {timeToPayday--;}
+	timeToPayday--;
+	
 	for(INeed n : needs) {
+		//System.out.println("Doing something");
 		n.update();
+		if(n.getAmount()<=n.getThreshold()) {
+			//System.out.println("Doing another hting");
+			buyNeeds();
+		}
 	}
+	//int i = this.sumMoney();
+	//if(i>0) {
+		//System.out.println("Money: " + i);
+//	}
 }
 
-
+public void buyNeeds() {
+	if(getTownHall() == null || getTownHall().city == null) {return;}
+	for(INeed n : needs) {
+		NeedBase n2 = (NeedBase)n;
+		//System.out.println("aaa");
+		if(n.getAmount()<=n.getThreshold()) {
+			//System.out.println("yet");
+			//withdraw(traderList, n);
+			TileCity c = getTownHall().city;
+			if(c!=null) {
+				for(Enumeration k = n2.getNeeds().keys(); k.hasMoreElements();) {
+					ItemStack i = new ItemStack(Item.getItemById((Integer) k.nextElement()));
+					int price = c.getHighestBuy(i.getItem()) + 100;
+					this.remMoney(100);
+					//setCustomNameTag("Added buy!" + price);
+					if(price <= this.sumMoney()) {
+						BuyOrder b = c.getBuy(this, i);
+						if(b!=null) {
+							if(this.ticksExisted%20 == 0) {
+								System.out.println("Increasing price: " + price);
+								b.setPrice(price);
+							}
+						}else {	
+							System.out.println("Adding order for " + i.stackSize + " " + i.getDisplayName() + " at " + price);
+							b = new BuyOrder(i,price,this,i.stackSize);
+							c.addBuy(b);
+							this.remMoney(price);
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 @Override
 public void travelToDimension(int par1)
@@ -733,6 +886,14 @@ public void readEntityFromNBT(NBTTagCompound tag){
   if(tag.hasKey("command")){playerIssuedCommand = new Command(tag.getCompoundTag("command"));} 
   if(tag.hasKey("townHall")){townHallPosition = new BlockPosition(tag.getCompoundTag("townHall"));}
   if(tag.hasKey("upkeepPos")){upkeepAutoBlock = new BlockPosition(tag.getCompoundTag("upkeepPos"));}
+  
+  NBTTagList needList = tag.getTagList("needs", Constants.NBT.TAG_COMPOUND);
+
+	for(int i = 0;i < needList.tagCount(); i++) {
+		NBTTagCompound tg = needList.getCompoundTagAt(i);
+		needs.add(new NeedBase(tg));
+	}
+  
   onWeaponInventoryChanged();
 }
 
@@ -743,6 +904,13 @@ public void writeEntityToNBT(NBTTagCompound tag){
   if(playerIssuedCommand!=null){tag.setTag("command", playerIssuedCommand.writeToNBT(new NBTTagCompound()));}
   if(townHallPosition!=null){tag.setTag("townHall", townHallPosition.writeToNBT(new NBTTagCompound()));}
   if(upkeepAutoBlock!=null){tag.setTag("upkeepPos", upkeepAutoBlock.writeToNBT(new NBTTagCompound()));}
+  
+  NBTTagList needsL = new NBTTagList();
+  
+  for(INeed need : needs) {
+	  needsL.appendTag(need.writeToNBT(new NBTTagCompound()));
+  }
+  tag.setTag("needs", needsL);
 }
 
 public NpcPlayerOwned getSpouse() {

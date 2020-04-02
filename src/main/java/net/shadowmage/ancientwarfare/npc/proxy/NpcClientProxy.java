@@ -22,6 +22,7 @@ import net.shadowmage.ancientwarfare.npc.config.AWNPCStatics;
 import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
 import net.shadowmage.ancientwarfare.npc.entity.NpcMedieval;
 import net.shadowmage.ancientwarfare.npc.gui.GuiCity;
+import net.shadowmage.ancientwarfare.npc.gui.GuiCityMarket;
 import net.shadowmage.ancientwarfare.npc.gui.GuiCombatOrder;
 import net.shadowmage.ancientwarfare.npc.gui.GuiNpcBard;
 import net.shadowmage.ancientwarfare.npc.gui.GuiNpcCreativeControls;
@@ -70,6 +71,7 @@ public void registerClient()
   NetworkHandler.registerGui(NetworkHandler.GUI_NPC_FACTION_BARD, GuiNpcFactionBard.class);
   NetworkHandler.registerGui(NetworkHandler.GUI_GRANT, GuiLandGrant.class);
   NetworkHandler.registerGui(NetworkHandler.GUI_CITY, GuiCity.class);
+  NetworkHandler.registerGui(NetworkHandler.GUI_CITY_MARKET, GuiCityMarket.class);
 
 
   

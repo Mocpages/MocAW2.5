@@ -16,6 +16,7 @@ import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 import net.shadowmage.ancientwarfare.npc.entity.NpcWorker;
 import net.shadowmage.ancientwarfare.npc.tile.LandGrant;
 import sereneseasons.api.season.Season;
+import sereneseasons.api.season.Season.SubSeason;
 import sereneseasons.handler.season.SeasonHandler;
 import sereneseasons.season.SeasonSavedData;
 import sereneseasons.season.SeasonTime;
@@ -70,18 +71,24 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	
 	@Override
 	public void updateTask() {
+		npc.setCustomNameTag("Working");
 		//planting = false;
 		SeasonSavedData seasonData = SeasonHandler.getSeasonSavedData(worker.worldObj);
         SeasonTime seasonTime = new SeasonTime(seasonData.seasonCycleTicks);
+        
 		Season s = seasonTime.getSeason();
 		if(s == Season.SPRING) {
-			if(!planting) {
+			if(seasonTime.getSubSeason() == SubSeason.EARLY_SPRING || seasonTime.getSubSeason() == SubSeason.MID_SPRING) {
 				till();
-			}else {
+			}else if(seasonTime.getSubSeason() == SubSeason.LATE_SPRING){
 				plant();
 			}
 		}else if (s== Season.SUMMER) {
-			weed();
+			if(seasonTime.getSubSeason() == SubSeason.EARLY_SUMMER) {
+				plant();
+			}else {
+				weed();
+			}
 		}else if(s== Season.AUTUMN) {
 			harvest();
 		}
@@ -90,6 +97,7 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	private void till() {
 		BlockPosition pos = getNextPos();
 		if(pos==null) {
+			npc.setCustomNameTag("Pos is null");
 			return;
 		}
 		double dist = npc.getDistanceSq(pos.x, pos.y, pos.z);
@@ -107,7 +115,6 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	}
 	
 	private void plant() {
-		worker.setCustomNameTag("P l  a  n   t");
 		BlockPosition pos = getNextPos();
 		if(pos==null) {
 			worker.setCustomNameTag("ah fuck here we go again");
@@ -134,7 +141,7 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 		if(ticksAtWork>=60 && b == Blocks.farmland) {
 			ticksAtWork = 0;
 			curPlot.blocksToPlant.remove(pos);
-			worker.worldObj.setBlock(pos.x, pos.y+1, pos.z, Blocks.wheat);
+			worker.worldObj.setBlock(pos.x, pos.y, pos.z, Blocks.wheat);
 		}
 	}
 	
@@ -169,14 +176,21 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	
 	private void work_harvest(BlockPosition pos) {
 		ticksAtWork++;
-		//npc.setCustomNameTag("Harvesting: " + ticksAtWork);
+		npc.setCustomNameTag("Harvesting: " + ticksAtWork);
 		Block b = worker.worldObj.getBlock(pos.x, pos.y, pos.z);
 		if(ticksAtWork>=60 && b == Blocks.wheat) {
 			ticksAtWork = 0;
 			curPlot.blocksToHarvest.remove(pos);
-			List<ItemStack> stacks = b.getDrops(worker.worldObj, pos.x, pos.y, pos.z, 1, 1);
-			float taxRate = 100F / (float)curPlot.getTithe();
-			worker.setCustomNameTag("tax rate: " + taxRate);
+			int meta = worker.worldObj.getBlockMetadata(pos.x, pos.y, pos.z);  
+			List<ItemStack> stacks = b.getDrops(worker.worldObj, pos.x, pos.y, pos.z, meta, 1);
+			float taxRate;
+			//if(curPlot.getTithe() != 0){
+			//	taxRate = 100F / (float)curPlot.getTithe();
+			//}else {
+		//		taxRate = 0.0F;
+			//}
+			taxRate = 10.0F;
+			//worker.setCustomNameTag("tax rate: " + taxRate);
 			for(ItemStack s : stacks) {
 				taxCounter++;
 				if(taxCounter < taxRate) {
@@ -189,6 +203,8 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 			}
 			worker.worldObj.setBlock(pos.x, pos.y, pos.z, Blocks.air);
 			worker.worldObj.setBlock(pos.x, pos.y-1, pos.z, Blocks.dirt);
+		}else if(ticksAtWork>=60) {
+			curPlot.blocksToHarvest.remove(pos);
 		}
 	}
 	
@@ -227,16 +243,14 @@ public class NpcAIPlayerOwnedFarm extends NpcAI{
 	}
 	
 	public void work(BlockPosition pos) {
-		//npc.setCustomNameTag("Working: " + ticksAtWork);
+		npc.setCustomNameTag("Tilling: " + ticksAtWork);
 		ticksAtWork++;
 		Block b = worker.worldObj.getBlock(pos.x, pos.y, pos.z);
-		if(ticksAtWork>=60 && b == Blocks.grass || b == Blocks.dirt) {
+		worker.setCustomNameTag(b.getLocalizedName());
+		if(ticksAtWork>=60 && (b == Blocks.grass || b == Blocks.dirt)) {
 			ticksAtWork = 0;
 			curPlot.blocksToTill.remove(pos);
 			worker.worldObj.setBlock(pos.x, pos.y, pos.z, Blocks.farmland);
-		}else if(ticksAtWork>100) {
-			ticksAtWork = 0;
-			planting = true;
 		}
 	}
 	

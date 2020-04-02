@@ -1,12 +1,15 @@
 package net.shadowmage.ancientwarfare.npc.gui;
 
+import net.minecraft.client.Minecraft;
 import net.shadowmage.ancientwarfare.core.container.ContainerBase;
 import net.shadowmage.ancientwarfare.core.gui.GuiContainerBase;
+import net.shadowmage.ancientwarfare.core.gui.elements.Button;
 import net.shadowmage.ancientwarfare.core.gui.elements.Checkbox;
 import net.shadowmage.ancientwarfare.core.gui.elements.Label;
 import net.shadowmage.ancientwarfare.core.gui.elements.NumberInput;
 import net.shadowmage.ancientwarfare.core.gui.elements.Text;
 import net.shadowmage.ancientwarfare.npc.container.ContainerNpcCreativeControls;
+import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 
 public class GuiNpcCreativeControls extends GuiContainerBase
 {
@@ -17,7 +20,7 @@ NumberInput attackDamageOverrideInput;
 NumberInput armorValueOverrideInput;
 NumberInput maxHealthOverrideInput;
 Checkbox wanderCheckbox;
-
+Button openInv;
 boolean hasChanged = false;
 
 ContainerNpcCreativeControls container;
@@ -123,7 +126,21 @@ public void initElements()
   addGuiElement(wanderCheckbox);
   totalHeight+=16;
   
+  
+  Button button = new Button(8, totalHeight, 75, 12, "guistrings.npc.death_list"){
+  @Override
+  protected void onPressed(){
+	  if(container.npc instanceof NpcPlayerOwned) {
+		  container.removeSlots();
+		  Minecraft.getMinecraft().displayGuiScreen(new GuiNpcBackpack(GuiNpcCreativeControls.this)); //TODO display inv
+		}
+    }
+  };
+  button.setText("Inventory");
+  addGuiElement(button);
+  totalHeight += 12;
   this.ySize=totalHeight+8;  
+
   }
 
 @Override

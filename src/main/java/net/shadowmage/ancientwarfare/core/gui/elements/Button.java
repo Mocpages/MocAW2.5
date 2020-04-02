@@ -62,6 +62,13 @@ public final void setText(String text)
   textY = (height - 8)/2;   
   }
 
+public void setTextOverride(String text) {
+	this.text = text;
+	int tw = fr.getStringWidth(this.text);
+	textX = (width - tw)/2;
+	textY = (height - 8)/2; 
+}
+
 @Override
 public void render(int mouseX, int mouseY, float partialTick)
   {
