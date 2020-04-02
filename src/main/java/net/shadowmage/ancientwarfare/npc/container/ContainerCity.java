@@ -40,10 +40,6 @@ public class ContainerCity extends ContainerBase{
 			if(!player.worldObj.isRemote){
 				city.addViewer(this);
 				prices.addAll(city.getPrices());
-		//		System.out.println("CONTAINER CREATION ITEMS:");
-				//for(MarketPrice p : prices) {
-			//		System.out.println("ITEM: " + p.i.getUnlocalizedName() + " buy: " + p.buy + " sell: " + p.sell);
-				//}
 			}
 		}
 		else{
@@ -52,27 +48,11 @@ public class ContainerCity extends ContainerBase{
 	}
 	
 	public List<MarketPrice> getPrices(){
-//		List<MarketPrice> prices = new ArrayList<MarketPrice>();
-//		for(Item i : city.getItems()) {
-//			float b = city.getHighestBuy(i);
-//			float s = 0.0f; //city.getLowestSell(i);
-//			prices.add(new MarketPrice(i,b,s));
-//		}
-	//	ItemStack i = new ItemStack(Items.baked_potato);
-	//	prices.add(new MarketPrice(i.getItem(),city.getHighestBuy(i.getItem()),city.getLowestSell(i.getItem())));
-//		for(BuyOrder b : city.getBuys()) {
-//			prices.add(new MarketPrice(b.getItem(),b.getPrice(),city.getLowestSell(b.getItem())));
-//		}
-		//System.out.println("GET-PRICES PRICES");
-		//for(MarketPrice p : prices) {
-			//System.out.println("ITEM: " + p.i.getUnlocalizedName() + " buy: " + p.buy + " sell: " + p.sell);
-	//	}
 		return prices;
 	}
 	
 	@Override
 	public void sendInitData(){
-		//System.out.println("Sending init data!");
 		NBTTagList list = new NBTTagList();
 		for(MarketPrice p : prices) {
 		    list.appendTag(p.writeToNBT(new NBTTagCompound()));
@@ -80,13 +60,11 @@ public class ContainerCity extends ContainerBase{
 		NBTTagCompound tag = new NBTTagCompound();
 		tag.setTag("priceList", list);
 		sendDataToClient(tag);
-		//System.out.println("Sending data to client!");
 	 }
 	
 	@Override
 	public void handlePacketData(NBTTagCompound tag) {
 		if(tag.hasKey("priceList")) {
-			//System.out.println("Receiving packet data");
 			prices.clear();
 			NBTTagList list = tag.getTagList("priceList", Constants.NBT.TAG_COMPOUND);
 			for(int i = 0; i < list.tagCount(); i++){

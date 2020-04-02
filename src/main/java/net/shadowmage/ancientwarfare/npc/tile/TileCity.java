@@ -24,18 +24,15 @@ import net.shadowmage.ancientwarfare.npc.container.ContainerCity;
 import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 
 public class TileCity  extends TileEntity implements IOwnable, IInventory, IInteractableTile{
-	private String ownerName = "";
-	private InventoryBasic inventory = new InventoryBasic(27);
-	private List<ContainerCity> viewers = new ArrayList<ContainerCity>();
-	public List<BuyOrder> buyOrders = new ArrayList<BuyOrder>();
-	public List <SellOrder> sellOrders = new ArrayList<SellOrder>();
-	boolean updated = false;
-	private static List<TileCity> cityList = new ArrayList<TileCity>();
-	Random r = new Random();
-	public int id = r.nextInt(10000);
-	public int counter = 0;
-	private ArrayList<BuyOrder> lastBuy = new ArrayList<BuyOrder>();
-	private ArrayList<SellOrder> lastSell = new ArrayList<SellOrder>();
+	private String ownerName = ""; 
+	private InventoryBasic inventory = new InventoryBasic(27); 
+	private List<ContainerCity> viewers = new ArrayList<ContainerCity>(); //containers which are viewing this tile
+	public List<BuyOrder> buyOrders = new ArrayList<BuyOrder>(); //active buy orders
+	public List <SellOrder> sellOrders = new ArrayList<SellOrder>(); //active sell orders
+	boolean updated = false; //Some stuff has to be updated after game finishes loading; this tracks if we've done that
+	private static List<TileCity> cityList = new ArrayList<TileCity>(); //tracks all cities for trade
+	private ArrayList<BuyOrder> lastBuy = new ArrayList<BuyOrder>(); //tracks previous buy orders
+	private ArrayList<SellOrder> lastSell = new ArrayList<SellOrder>(); //tracks previous sell orders
 	
 	public static TileCity getCityAt(int x, int y, int z) {
 		for(TileCity c : cityList) {
@@ -51,19 +48,17 @@ public class TileCity  extends TileEntity implements IOwnable, IInventory, IInte
 	  return true;
 	}
 	
-	public List<MarketPrice> getPrices(){
+	public List<MarketPrice> getPrices(){ //get all prices for display
 		List<MarketPrice> prices = new ArrayList<MarketPrice>();
 		for(Item i : getItems()) {
 			float b = getHighestBuy(i);
 			float s = getLowestSell(i);
 			prices.add(new MarketPrice(i,b,s));
-		}
-		
-		//prices.add(new MarketPrice(Items.beef, buyOrders.size(), getItems().size()));
+		}		
 		return prices;
 	}
 	
-	public float getLowestSell(Item i) {
+	public float getLowestSell(Item i) { //get the sale order w/ the lowest price
 		float lowest = (float)Double.POSITIVE_INFINITY;
 		for(SellOrder sale : sellOrders) {
 			if(sale.getItem() == i) {
@@ -73,7 +68,6 @@ public class TileCity  extends TileEntity implements IOwnable, IInventory, IInte
 				}
 			}
 		}
-		
 		if(lowest < Double.POSITIVE_INFINITY) {
 			return lowest;
 		}else {
@@ -85,7 +79,7 @@ public class TileCity  extends TileEntity implements IOwnable, IInventory, IInte
 		}
 	}
 	
-	public SellOrder getLastSale(Item i) {
+	public SellOrder getLastSale(Item i) { //get the latest sale order to be resolved
 		for(SellOrder s : lastSell) {
 			if(s.getItem() == i) {
 				return s;
@@ -178,8 +172,8 @@ public class TileCity  extends TileEntity implements IOwnable, IInventory, IInte
 	@Override
 	public void updateEntity(){
 	  if(worldObj.isRemote){return;}
-	  if(!updated) {
-		  updated = true;
+	  if(!updated) { //If the world has been loaded but we haven't set the owners for our orders yet
+		  updated = true; //do that
 		  for(BuyOrder b : buyOrders) {
 			  b.updateOwner(worldObj);
 		  }
@@ -211,59 +205,65 @@ public class TileCity  extends TileEntity implements IOwnable, IInventory, IInte
 	
 	
 	public void updateOrders() {
+		//Goes through the pending orders and tries to resolve them
 		for(Item i : getItems()){
 			BuyOrder b = getHighestBuyOrd(i);
 			SellOrder s = getLowestSellOrd(i);
 			if(b==null) {
+				//If there's no buy order we slowly decrement price. TODO should I really do this?
 				s.setPrice(Math.max(100,s.getPrice()-100));
 				continue;
 			}
-			if(s==null) {continue;}
+			if(s==null) {continue;} //If there's no sell order carry on
 			if(s.getOwner() == null) {
 				ItemStack stk = new ItemStack(s.getItem());
 				addItems(stk, s.getAmt());
-			}
+			} //If the sale owner is dead, take his property
 			if(b.getOwner() == null) {
 				ItemStack stk = new ItemStack(Item.getItemById(5303));
 				addItems(stk, s.getPrice() * s.getAmt() / 100);
-			}
+			} //same for the buy order
 			
 			if(b.getOwner() == null || s.getOwner() == null) { continue;}
+			//then carry on, can't finish the sale
 			
-			if(s.getPrice() <= b.getPrice()) {
-				handleBuy(b,s);
+			if(s.getPrice() <= b.getPrice()) { //if the prices are compatible
+				handleBuy(b,s); //call oru helper
 			}else {
-				s.setPrice(Math.max(100,s.getPrice()-100));//todo ???
+				s.setPrice(Math.max(100,s.getPrice()-100)); //If the sale price is too high, decrease it. TODO only do this every few ticks.
 			}
 		}
 	}
 	
 	
 	public void handleBuy(BuyOrder b, SellOrder s) {
+		//Helper function to resolve a transaction between two compatible orders
 		ItemStack stk = b.getItemStack();
 		int amt = 0;
-		if(s.getAmt() > b.getAmt()) {
+		if(s.getAmt() > b.getAmt()) { //If the sale order wants to sell more than the buy order wants to buy
 			s.setAmt(s.getAmt() - b.getAmt()); //Decrease s qty by b qty
 			amt = b.getAmt();
 			buyOrders.remove(b); //delete b			
-		}else if(s.getAmt() == b.getAmt()) {
+		}else if(s.getAmt() == b.getAmt()) { //if they want to trade the same amount
 			amt = s.getAmt();
 			buyOrders.remove(b);
 			sellOrders.remove(s);
-		}else { //s amt < b amt
+		}else { //If the buy order wants to purchase more than the seller is selling
 			b.setAmt(b.getAmt() - s.getAmt());
 			sellOrders.remove(s);
 			amt = s.getAmt();
 		}
+		//give items to buyer
 		addItems(stk, amt, b.getOwner());
 		int price = (s.getPrice() * amt) / 100;
+		//give gold to seller. 5303 is the current item ID for mf2 gold coins - TODO make this a global or something
 		stk = new ItemStack(Item.getItemById(5303));
 		addItems(stk, price, s.getOwner());
-	//	b.getOwner().addToInv(stk);
-		//s.getOwner().addToInv(); //give gold to seller
 	}
 	
+
 	public void addItems(ItemStack stk, int amt, NpcPlayerOwned p) {
+		//helper function to add items to an NPC inventory
 		System.out.println("Adding " + amt + " " + stk.getDisplayName());
 		if(amt <= 64) {
 			stk.stackSize = amt;
@@ -276,6 +276,7 @@ public class TileCity  extends TileEntity implements IOwnable, IInventory, IInte
 	}
 	
 	public void addItems(ItemStack stk, int amt) {
+		//helper function to add items to our inventory
 		System.out.println("Adding " + amt + " " + stk.getDisplayName());
 		if(amt <= 64) {
 			stk.stackSize = amt;
@@ -375,13 +376,11 @@ public class TileCity  extends TileEntity implements IOwnable, IInventory, IInte
 	}
 	
 	public void addBuy(BuyOrder b) {
-		//TODO try instant buy
 		buyOrders.add(b);
 	}
 	
 
 	public void addSell(SellOrder s) {
-		// TODO Auto-generated method stub
 		sellOrders.add(s);
 	}
 	

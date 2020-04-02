@@ -75,12 +75,10 @@ public class BuyOrder {
 	}
 
 	public NpcPlayerOwned getOwner() {
-		// TODO Auto-generated method stub
 		return owner;
 	}
 
 	public ItemStack getItemStack() {
-		// TODO Auto-generated method stub
 		return toBuy;
 	}
 }

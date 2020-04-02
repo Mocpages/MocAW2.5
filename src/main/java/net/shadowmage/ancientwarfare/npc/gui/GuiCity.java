@@ -21,10 +21,6 @@ public GuiCity(ContainerBase container){
 public void initElements()
   {
   this.container.addSlots();
-  System.out.println("CITY GUI ITEMS:");
-	for(MarketPrice p : this.container.prices) {
-		System.out.println("ITEM: " + p.i.getUnlocalizedName() + " buy: " + p.buy + " sell: " + p.sell);
-	}
   Button button = new Button(8, 8, 75, 12, "guistrings.npc.death_list")
     {
     @Override

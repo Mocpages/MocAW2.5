@@ -16,6 +16,7 @@ import net.shadowmage.ancientwarfare.npc.tile.SellOrder;
 import net.shadowmage.ancientwarfare.npc.tile.TileCity;
 
 public class NpcAIPlayerOwnedNobleSell extends NpcAI{
+	//this class basically grabs all items from a town hall and sells them. 
 	boolean init;
 	UpkeepOrder order;
 	ItemStack routeStack;
