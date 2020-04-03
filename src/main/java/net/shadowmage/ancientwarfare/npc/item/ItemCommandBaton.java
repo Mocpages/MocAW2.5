@@ -40,7 +40,7 @@ public class ItemCommandBaton extends Item implements IItemKeyInterface, IItemCl
 
 double attackDamage = 5.d;
 MovingObjectPosition pos;
-
+int x, y, z, x1, y1, z1;
 private ToolMaterial material;
 
 public ItemCommandBaton(String name, ToolMaterial material)
@@ -52,6 +52,12 @@ public ItemCommandBaton(String name, ToolMaterial material)
   this.material = material;
   this.maxStackSize = 1;
   this.setMaxDamage(material.getMaxUses());
+  x = 0;
+  y = 0;
+  z = 0;
+  x1 = 0;
+  y1 = 0;
+  z1 = 0;
   }
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -215,7 +221,10 @@ public boolean onKeyActionClient(EntityPlayer player, ItemStack stack, ItemKey k
     if(hit!=null)
       {
       CommandType c = hit.typeOfHit==MovingObjectType.ENTITY ? CommandType.ATTACK : CommandType.ATTACK_AREA;
-      NpcCommand.handleCommandClient(c, hit);
+      x = hit.blockX;
+      y  = hit.blockY;
+      z = hit.blockZ;
+      NpcCommand.handleCommandClient(c, x,y,z,x1,y1,z1);
       }
     }
     break;
@@ -225,8 +234,12 @@ public boolean onKeyActionClient(EntityPlayer player, ItemStack stack, ItemKey k
     if(hit!=null)
       {
       pos = hit;
-      CommandType c = hit.typeOfHit==MovingObjectType.ENTITY ? CommandType.GUARD : CommandType.MOVE;
-      NpcCommand.handleCommandClient(CommandType.GUARD, hit);
+      CommandType c = hit.typeOfHit==MovingObjectType.ENTITY ? CommandType.ATTACK : CommandType.ATTACK_AREA;
+      x1 = hit.blockX;
+      y1 = hit.blockY;
+      z1 = hit.blockZ;
+      System.out.println("AT CLIENT, X2 " +x1 + " Z2 " + z1);
+      NpcCommand.handleCommandClient(c, x,y,z,x1,y1,z1);
       }
     }
     break;
@@ -266,12 +279,12 @@ private void onNpcClicked(EntityPlayer player, NpcBase npc, ItemStack stack)
   set.writeToStack(stack);
   }
 
-public static void getCommandedEntities(World world, ItemStack stack, List<Entity> entities)
+public static void getCommandedEntities(World world, ItemStack stack, List<NpcBase> targets)
   {
-  if(world==null || stack==null || entities==null || !(stack.getItem() instanceof ItemCommandBaton)){return;}
+  if(world==null || stack==null || targets==null || !(stack.getItem() instanceof ItemCommandBaton)){return;}
   CommandSet set = new CommandSet();
   set.loadFromStack(stack);
-  set.getEntities(world, entities);
+  set.getEntities(world, targets);
   }
 
 /**
@@ -334,13 +347,13 @@ public void onNpcClicked(NpcBase npc)
     }
   }
 
-public void getEntities(World world, List<Entity> in)
+public void getEntities(World world, List<NpcBase> targets)
   {
   Entity e;
   for(UUID id : ids)
     {
     e = WorldTools.getEntityByUUID(world, id.getMostSignificantBits(), id.getLeastSignificantBits());
-    if(e!=null){in.add(e);}
+    if(e!=null){targets.add((NpcBase) e);}
     }
   }
 

@@ -31,7 +31,7 @@ private Gui gui = new Gui();
 /**
  * TODO move this off into separate class for datas, as this is a _render_ class...
  */
-private List<Entity> targetEntities = new ArrayList<Entity>();
+private List<NpcBase> targetEntities = new ArrayList<NpcBase>();
 private List<String> entityNames = new ArrayList<String>();
 private MovingObjectPosition target = null;
 String targetString = null;

@@ -83,7 +83,7 @@ public void updateTask()
     }
   case SET_HOME:
     {
-    npc.setHomeArea(cmd.x, cmd.y, cmd.z, 16);
+   // npc.setHomeArea(cmd.x, cmd.y, cmd.z, 16);
     npc.setPlayerCommand(null);
     break;
     }  

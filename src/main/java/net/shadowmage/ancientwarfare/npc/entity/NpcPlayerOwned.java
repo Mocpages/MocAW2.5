@@ -205,6 +205,7 @@ public boolean isPayday() {
 }
 
 public void addToInv(ItemStack i) {
+	System.out.println("Adding item " + i.getDisplayName() + " to inventory!");
 	InventoryTools.mergeItemStack(invBack, i, 0);
 }
 

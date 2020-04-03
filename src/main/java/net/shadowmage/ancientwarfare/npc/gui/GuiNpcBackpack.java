@@ -11,7 +11,6 @@ public class GuiNpcBackpack extends GuiContainerBase{
 	public GuiNpcBackpack(GuiNpcCreativeControls parent){
 		super((ContainerBase)parent.inventorySlots);
 		this.parent = parent;
-		System.out.println("Setting slots");
 		this.parent.container.setSlots();
 	}
 	

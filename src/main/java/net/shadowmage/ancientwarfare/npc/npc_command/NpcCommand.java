@@ -11,10 +11,12 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
+import net.shadowmage.ancientwarfare.core.util.BlockPosition;
 import net.shadowmage.ancientwarfare.core.util.WorldTools;
 import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
 import net.shadowmage.ancientwarfare.npc.item.ItemCommandBaton;
 import net.shadowmage.ancientwarfare.npc.network.PacketNpcCommand;
+import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.CommandType;
 import net.shadowmage.ancientwarfare.npc.entity.NpcPlayerOwned;
 
 public class NpcCommand
@@ -54,6 +56,11 @@ public static void handleCommandClient(CommandType type, MovingObjectPosition hi
     }
   }
 
+public static void handleCommandClient(CommandType type, int x, int y, int z, int x1, int y1, int z1) {
+	PacketNpcCommand pkt = new PacketNpcCommand(type, x, y, z, x1, y1, z1);
+    NetworkHandler.sendToServer(pkt);
+}
+
 /**
  * server side handle command. called from packet triggered from client key input while baton is equipped
  */
@@ -69,7 +76,7 @@ public static void handleServerCommand(EntityPlayer player, CommandType type, bo
     cmd = new Command(type, x);
     }
   List<Entity> targets = new ArrayList<Entity>();
-  ItemCommandBaton.getCommandedEntities(player.worldObj, player.getCurrentEquippedItem(), targets);
+//  ItemCommandBaton.getCommandedEntities(player.worldObj, player.getCurrentEquippedItem(), targets);
   int i = 0;
   NpcPlayerOwned p = (NpcPlayerOwned) targets.get(0);
   if(type == CommandType.SET_HOME){
@@ -86,8 +93,9 @@ public static void handleServerCommand(EntityPlayer player, CommandType type, bo
 		  p.setP(p.cx - dx, p.cy - dz);
 	  }
   }
-  double rows = targets.size() / getDist(p.x2, p.y2, p.getPX(), p.getPZ());
+  int rows = (int) Math.ceil(targets.size() / getDist(p.x2, p.y2, p.getPX(), p.getPZ()));
   int files = (int) Math.ceil(targets.size() / rows);
+  System.out.println("ranks: " + rows + " files: " + files);
 	  for(Entity e : targets)
 	    {
 	    if(e instanceof NpcBase)
@@ -98,11 +106,11 @@ public static void handleServerCommand(EntityPlayer player, CommandType type, bo
 	    	  p.setCustomNameTag("Test1");
 	    	  p.cx = (p.x2 - x)/2;
 		      p.cy = (p.y2 - z)/2;
-		      int x2 = interpolate(x, p.x2, files, targets.size());
-		      int z2 = interpolate(z, p.y2, files, targets.size());
-		      cmd = new Command(type, x2, y, z2);
+		    //  int x2 = interpolate(x, p.x2, files, targets.size());
+		      //int z2 = interpolate(z, p.y2, files, targets.size());
+		    //  cmd = new Command(type, x2, y, z2);
 		      i++;
-		      ((NpcBase)e).handlePlayerCommand(cmd);
+		     // ((NpcBase)e).handlePlayerCommand(cmd);
 	      }else {
 	    	  p = ((NpcPlayerOwned)e);
 		      p.cx = (p.getPX() + x)/2;
@@ -110,19 +118,70 @@ public static void handleServerCommand(EntityPlayer player, CommandType type, bo
 		      p.x2 = x;
 		      p.y2 = z;
 		   //   p.setCustomNameTag(Float.toString(f));
-		      int x2 = interpolate(p.getPX(), x, i, targets.size());
-		      int z2 = interpolate(p.getPZ(), z, i, targets.size());
-		      cmd = new Command(type, x2, y, z2);
+		      //int x2 = interpolate(p.getPX(), x, i, targets.size());
+		      //int z2 = interpolate(p.getPZ(), z, i, targets.size());
+		//      cmd = new Command(type, x2, y, z2);
 		      i++;
-		      p.setCustomNameTag("X:"+Integer.toString(x2)+" Z:"+Integer.toString(z2));
-		      ((NpcBase)e).handlePlayerCommand(cmd);
+		     // p.setCustomNameTag("X:"+Integer.toString(x2)+" Z:"+Integer.toString(z2));
+		  //    ((NpcBase)e).handlePlayerCommand(cmd);
 	      	}
 	      }
 	    }
   }
 
-public static int interpolate(int initial, int last, int i, int n) {
-	return  Math.round(initial + ((float)i/(n-1)) * (last - initial));
+public static void handleRow(List<NpcBase> targets, int x1, int x2, int z1, int z2) {
+	int i = 0;
+	for(NpcBase n : targets){
+		float xf = interpolate(x1, x2, i, targets.size());
+	    float zf = interpolate(z1, z2, i, targets.size());
+	    System.out.println("X1: " + x1 +  " Z1: " + z2 + " X2: " + x2 + " Z2: " + z2 + " XF: " + xf + " ZF " + zf);
+	    i++;
+	    n.handlePlayerCommand(new Command(CommandType.ATTACK_AREA, xf, 90, zf));
+	    
+	}
+}
+
+public static void handleFormation(List<NpcBase> targets, int x1, int x2, int z1, int z2, int files) {
+	if(targets.size() <= files) { //we only need one rank!
+		handleRow(targets,x1,x2,z1,z2);
+	}else {
+		handleRow(targets.subList(0, files),x1,x2,z1,z2);
+		double angle = getAngle(x1,x2,z1,z2);
+		int[] leftCoords = getBackOne(x1,z1, angle);
+		int[] rightCoords = getBackOne(x2,z2,angle);
+		handleFormation(targets.subList(files, targets.size()), leftCoords[0], rightCoords[0], leftCoords[1], rightCoords[1], files);
+	}
+}
+
+//int op = Math.max(Math.abs(x1 - x2), Math.abs(x2 - x1));
+//int adj = Math.max(Math.abs(z1 - z2), Math.abs(z2 - z1));
+//double angle = Math.atan2(op / adj);
+public static int[] getNewCoords(int x1, int x2, int z1, int z2) {
+	
+	
+	return null;
+}
+
+public static int[] getBackOne(int x, int z, double angle) {
+	//System.out.println("Angle: " + angle / Math.PI + "pi");
+	angle = 0.785;
+	double xPrime = x * Math.cos(angle) - z * Math.sin(angle);
+	double zPrime = -x  * Math.sin(angle) + z * Math.cos(angle);
+	zPrime -= 1;
+	int x2 = (int) (xPrime * Math.cos(angle) - zPrime * Math.sin(angle));
+	int z2 = (int) (-xPrime  * Math.sin(angle) + zPrime * Math.cos(angle));
+	return new int[] {x2,z2};
+}
+
+public static double getAngle(int x1, int x2, int z1, int z2) {
+	int cx = (x1 + x2) / 2;
+	int cz = (z1 + z2) / 2;
+	double angle = Math.atan2(z2 - cz, x2 - cx);
+	return angle;
+}
+
+public static float interpolate(int initial, int last, int i, int n) {
+	return initial + ((float)i/(n-1)) * (last - initial);
 }
 
 public static double getDist(int x1, int y1, int x2, int y2) {
@@ -141,8 +200,7 @@ public static float getSlope(int x1, int y1, int x2, int y2) {
 }
 
 
-public static void handleServerCommand(EntityPlayer player, CommandType type, boolean block, int xp, int yp, int zp, int x, int y, int z)
-{
+public static void handleServerCommand(EntityPlayer player, CommandType type, boolean block, int xp, int yp, int zp, int x, int y, int z){
 Command cmd = null;
 if(block)
   {
@@ -152,27 +210,21 @@ else
   {
   cmd = new Command(type, x);
   }	
-List<Entity> targets = new ArrayList<Entity>();
+List<NpcBase> targets = new ArrayList<NpcBase>();
 ItemCommandBaton.getCommandedEntities(player.worldObj, player.getCurrentEquippedItem(), targets);
-int i = 0;
-float m = getSlope(x, z, xp, zp);
-for(Entity e : targets)
-  {
-  if(e instanceof NpcBase)
-    {
-    cmd = new Command(type, x + i, y, z + Math.round(i * m));
-    ((NpcBase) e).setCustomNameTag(Float.toString(m));
-    i++;
-    ((NpcBase)e).handlePlayerCommand(cmd);
-    }
-  }
+System.out.println("Handling. X1 " + xp + " Z1 " + zp  + " X2 " +x + " Z2 " + z);
+int rows = (int) Math.ceil(targets.size() / getDist(xp, zp, x,z));
+int files = (int) Math.ceil(targets.size() / rows);
+
+handleFormation(targets,xp,x,zp,z,files);
+//handleRow(targets, xp,  x, zp, z);
 }
 
 
 public static final class Command
 {
 public CommandType type;
-public int x, y, z;
+public float x, y, z;
 public boolean blockTarget;
 
 UUID entityID;
@@ -185,12 +237,12 @@ public Command(NBTTagCompound tag)
   readFromNBT(tag);
   }
 
-public Command(CommandType type, int x, int y, int z)
+public Command(CommandType type, float xf, float y, float zf)
   {
   this.type = type;
-  this.x = x;
+  this.x = xf;
   this.y = y;
-  this.z = z;
+  this.z = zf;
   this.blockTarget = true;  
   }
 
@@ -219,9 +271,9 @@ public final void readFromNBT(NBTTagCompound tag)
   {
   type = CommandType.values()[tag.getInteger("type")];
   blockTarget = tag.getBoolean("block");
-  x = tag.getInteger("x");
-  y = tag.getInteger("y");
-  z = tag.getInteger("z");
+  x = tag.getFloat("x");
+  y = tag.getFloat("y");
+  z = tag.getFloat("z");
   if(tag.hasKey("idmsb") && tag.hasKey("idlsb"))
     {
     entityID = new UUID(tag.getLong("idmsb"), tag.getLong("idlsb"));
@@ -232,9 +284,9 @@ public final NBTTagCompound writeToNBT(NBTTagCompound tag)
   {
   tag.setInteger("type", type.ordinal());
   tag.setBoolean("block", blockTarget);
-  tag.setInteger("x", x);
-  tag.setInteger("y", y);
-  tag.setInteger("z", z);
+  tag.setFloat("x", x);
+  tag.setFloat("y", y);
+  tag.setFloat("z", z);
   if(entityID!=null)
     {
     tag.setLong("idmsb", entityID.getMostSignificantBits());
@@ -252,7 +304,7 @@ public void findEntity(World world)
   if(entity!=null){return;}
   if(entityID==null)
     {
-    entity = world.getEntityByID(x);
+    entity = world.getEntityByID(Math.round(x));
     if(entity!=null)
       {
       entityID = entity.getPersistentID();
