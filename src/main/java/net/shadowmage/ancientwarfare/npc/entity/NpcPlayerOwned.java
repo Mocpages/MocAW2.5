@@ -1,5 +1,6 @@
 package net.shadowmage.ancientwarfare.npc.entity;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -32,6 +33,7 @@ import net.shadowmage.ancientwarfare.core.item.ItemBackpack;
 import net.shadowmage.ancientwarfare.core.network.NetworkHandler;
 import net.shadowmage.ancientwarfare.core.util.BlockPosition;
 import net.shadowmage.ancientwarfare.core.util.InventoryTools;
+import net.shadowmage.ancientwarfare.core.util.Trig;
 import net.shadowmage.ancientwarfare.npc.AncientWarfareNPC;
 import net.shadowmage.ancientwarfare.npc.ai.owned.NpcAIPlayerOwnedRideHorse;
 import net.shadowmage.ancientwarfare.npc.config.AWNPCStatics;
@@ -43,6 +45,7 @@ import net.shadowmage.ancientwarfare.npc.item.ItemNPCSettings;
 import net.shadowmage.ancientwarfare.npc.needs.INeed;
 import net.shadowmage.ancientwarfare.npc.needs.NeedBase;
 import net.shadowmage.ancientwarfare.npc.needs.NeedHelper;
+import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.Command;
 import net.shadowmage.ancientwarfare.npc.npc_command.NpcCommand.CommandType;
 import net.shadowmage.ancientwarfare.npc.orders.UpkeepOrder;
@@ -817,6 +820,22 @@ public TileCity getCity() {
 @Override
 public void onLivingUpdate(){  
 	super.onLivingUpdate();
+	Command cmd = this.getCurrentCommand();
+	if(guide != null) {
+		double[] goal = NpcCommand.getRelOffset(guide.posX, guide.posZ, this.angle, this.xOff, this.zOff);
+		this.handlePlayerCommand(new Command(CommandType.ATTACK_AREA, goal[0], 90, goal[1]));
+	}
+	if(cmd != null) {
+		double[] d = cmd.getCoords();
+		double dist = Trig.getDistance(this.posX, d[1], this.posZ, d[0], d[1], d[2]);
+		if(dist <= 1.0) {
+			this.setPosition(d[0], this.posY, d[2]);
+		}
+		this.setCustomNameTag(""+Math.round(dist * 100.0) / 100.0);
+	}else {
+		//this.setCustomNameTag("Bob");
+	}
+	
 	//if(timeToPayday>0) {timeToPayday--;}
 	timeToPayday--;
 	

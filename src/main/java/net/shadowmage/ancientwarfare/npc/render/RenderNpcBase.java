@@ -38,362 +38,378 @@ import org.lwjgl.opengl.GL11;
 public class RenderNpcBase extends RenderBiped
 {
 
-//func_147906_a---drawLabel
-List<Integer> renderTasks = new ArrayList<Integer>();
+	//func_147906_a---drawLabel
+	List<Integer> renderTasks = new ArrayList<Integer>();
 
-public RenderNpcBase()
-  {
-  super(new ModelBiped(), 0.6f);
-  }
+	public RenderNpcBase()
+	{
+		super(new ModelBiped(), 0.6f);
+	}
 
 
-@Override
-protected void preRenderCallback(EntityLivingBase entityLivingBase, float partialTickTime) {
-	NpcBase npc = (NpcBase)entityLivingBase;
-	    if(npc.isChild) {
-			  float growth = (npc.isMale ? 0.39F : 0.37F) / 5040000 * npc.age;
-	    	 //float growth = 0.38F * (npc.age/1000);
-			 // float scale = npc.isMale ? 0.9375F : 0.915F;
-			  float scale = 0.55F + growth;
-			  scale /= 2.5;
-			  GL11.glScalef(scale, scale + npc.height, scale);
-			  //scale *= 2;
-			  GL11.glScalef(scale + npc.width, scale, scale + npc.width);
-		  }
-}
+	@Override
+	protected void preRenderCallback(EntityLivingBase entityLivingBase, float partialTickTime) {
+		NpcBase npc = (NpcBase)entityLivingBase;
+		if(npc.isChild) {
+			float growth = (npc.isMale ? 0.39F : 0.37F) / 5040000 * npc.age;
+			//float growth = 0.38F * (npc.age/1000);
+			// float scale = npc.isMale ? 0.9375F : 0.915F;
+			float scale = 0.55F + growth;
+			scale /= 2.5;
+			GL11.glScalef(scale, scale + npc.height, scale);
+			//scale *= 2;
+			GL11.glScalef(scale + npc.width, scale, scale + npc.width);
+		}
+	}
 
-@Override
-public void doRender(Entity par1Entity, double x, double y, double z, float par8, float par9)
-  {  
-	NpcBase npc = (NpcBase)par1Entity;
-  super.doRender(par1Entity, x, y, z, par8, par9);
-  EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+	@Override
+	public void doRender(Entity par1Entity, double x, double y, double z, float par8, float par9)
+	{  
+		NpcBase npc = (NpcBase)par1Entity;
+		super.doRender(par1Entity, x, y, z, par8, par9);
+		EntityPlayer player = Minecraft.getMinecraft().thePlayer;
 
-  if(npc.isHostileTowards(player))
-    {
-    if(AWNPCStatics.renderHostileNames.getBoolean())
-      {
-      String name = getNameForRender(npc, true); 
-      if(AWNPCStatics.renderTeamColors.getBoolean())
-        {
-        ScorePlayerTeam playerTeam = player.worldObj.getScoreboard().getTeam(player.getCommandSenderName());
-        ScorePlayerTeam npcTeam = (ScorePlayerTeam)npc.getTeam();
-        if(npcTeam!=null && npcTeam!=playerTeam)
-          {
-          name = npcTeam.getColorPrefix()+name+npcTeam.getColorSuffix();
-          }
-        }
-      renderColoredLabel(npc, name, x, y, z, 64, 0x20ff0000, 0xffff0000);
-      }      
-    }
-  else
-    {
-    boolean canBeCommandedBy = npc.canBeCommandedBy(player.getCommandSenderName());
-    if(AWNPCStatics.renderFriendlyNames.getBoolean())
-      {
-      String name = getNameForRender(npc, false);
-      if(AWNPCStatics.renderTeamColors.getBoolean())
-        {
-        ScorePlayerTeam playerTeam = player.worldObj.getScoreboard().getTeam(player.getCommandSenderName());
-        ScorePlayerTeam npcTeam = (ScorePlayerTeam)npc.getTeam();
-        if(npcTeam!=null && npcTeam!=playerTeam)
-          {
-          name = npcTeam.getColorPrefix()+name+npcTeam.getColorSuffix();
-          }
-        }
-      else if(!canBeCommandedBy)
-        {
-        name = EnumChatFormatting.DARK_GRAY.toString()+name;
-        }
-      renderColoredLabel(npc, name, x, y, z, 64, 0x20ffffff, 0xffffffff);
-      }
-    if(canBeCommandedBy)
-      {
-      if(AWNPCStatics.renderAI.getBoolean())
-        {
-        renderNpcAITasks(npc, x, y, z, 64);
-        }
-      }
-    }
-  }
+		if(npc.isHostileTowards(player))
+		{
+			if(AWNPCStatics.renderHostileNames.getBoolean())
+			{
+				String name = getNameForRender(npc, true); 
+				if(AWNPCStatics.renderTeamColors.getBoolean())
+				{
+					ScorePlayerTeam playerTeam = player.worldObj.getScoreboard().getTeam(player.getCommandSenderName());
+					ScorePlayerTeam npcTeam = (ScorePlayerTeam)npc.getTeam();
+					if(npcTeam!=null && npcTeam!=playerTeam)
+					{
+						name = npcTeam.getColorPrefix()+name+npcTeam.getColorSuffix();
+					}
+				}
+				renderColoredLabel(npc, name, x, y, z, 64, 0x20ff0000, 0xffff0000);
+			}      
+		}
+		else
+		{
+			boolean canBeCommandedBy = npc.canBeCommandedBy(player.getCommandSenderName());
+			if(AWNPCStatics.renderFriendlyNames.getBoolean())
+			{
+				String name = getNameForRender(npc, false);
+				if(AWNPCStatics.renderTeamColors.getBoolean())
+				{
+					ScorePlayerTeam playerTeam = player.worldObj.getScoreboard().getTeam(player.getCommandSenderName());
+					ScorePlayerTeam npcTeam = (ScorePlayerTeam)npc.getTeam();
+					if(npcTeam!=null && npcTeam!=playerTeam)
+					{
+						name = npcTeam.getColorPrefix()+name+npcTeam.getColorSuffix();
+					}
+				}
+				else if(!canBeCommandedBy)
+				{
+					name = EnumChatFormatting.DARK_GRAY.toString()+name;
+				}
+				renderColoredLabel(npc, name, x, y, z, 64, 0x20ffffff, 0xffffffff);
+			}
+			if(canBeCommandedBy)
+			{
+				if(AWNPCStatics.renderAI.getBoolean())
+				{
+					renderNpcAITasks(npc, x, y, z, 64);
+				}
+			}
+		}
+	}
 
-@Override
-protected void func_82420_a(EntityLiving par1EntityLiving, ItemStack par2ItemStack)
-  {
-  super.func_82420_a(par1EntityLiving, par2ItemStack);
-  NpcBase npc = (NpcBase)par1EntityLiving;
-  this.field_82423_g.heldItemLeft = this.field_82425_h.heldItemLeft = this.modelBipedMain.heldItemLeft = npc.getShieldStack()!=null ? 1 : 0;
-  }
+	@Override
+	protected void func_82420_a(EntityLiving par1EntityLiving, ItemStack par2ItemStack)
+	{
+		super.func_82420_a(par1EntityLiving, par2ItemStack);
+		NpcBase npc = (NpcBase)par1EntityLiving;
+		this.field_82423_g.heldItemLeft = this.field_82425_h.heldItemLeft = this.modelBipedMain.heldItemLeft = npc.getShieldStack()!=null ? 1 : 0;
+	}
 
-@Override
-protected void renderEquippedItems(EntityLiving par1EntityLiving, float par2)
-  {
-  super.renderEquippedItems(par1EntityLiving, par2);
-  NpcBase npc = (NpcBase)par1EntityLiving;
-  ItemStack itemstack = npc.getShieldStack();  
-  Item item;
-  
-  //TODO clean up this copypasta code
-  float f1;
-  if (itemstack != null && itemstack.getItem() != null)
-    {
-    item = itemstack.getItem();
-    GL11.glPushMatrix();
-    
-        
-    if (this.mainModel.isChild)
-      {
-      f1 = 0.5F;
-      GL11.glTranslatef(0.0F, 0.625F, 0.0F);
-      GL11.glRotatef(-20.0F, -1.0F, 0.0F, 0.0F);
-      GL11.glScalef(f1, f1, f1);
-      }
-    
-    
+	@Override
+	protected void renderEquippedItems(EntityLiving par1EntityLiving, float par2)
+	{
+		super.renderEquippedItems(par1EntityLiving, par2);
+		NpcBase npc = (NpcBase)par1EntityLiving;
+		ItemStack itemstack = npc.getShieldStack();  
+		Item item;
 
-    this.modelBipedMain.bipedLeftArm.postRender(0.0625F);
-    GL11.glTranslatef(0, 0.5625F, 0);//translate down to the 'hand'
+		//TODO clean up this copypasta code
+		float f1;
+		if (itemstack != null && itemstack.getItem() != null)
+		{
+			item = itemstack.getItem();
+			GL11.glPushMatrix();
 
-    IItemRenderer customRenderer = MinecraftForgeClient.getItemRenderer(itemstack, EQUIPPED);
-    boolean is3D = (customRenderer != null && customRenderer.shouldUseRenderHelper(EQUIPPED, itemstack, BLOCK_3D));
 
-    if (item instanceof ItemBlock && (is3D || RenderBlocks.renderItemIn3d(Block.getBlockFromItem(item).getRenderType())))
-      {
-      f1 = 0.5F;
-      GL11.glTranslatef(0.0625F, 0.0625f, -0.25F);
-      f1 *= 0.75F;
-      GL11.glRotatef(20.0F, 1.0F, 0.0F, 0.0F);
-      GL11.glRotatef(45.0F, 0.0F, 1.0F, 0.0F);
-      GL11.glScalef(-f1, -f1, f1);
-      }
-    else if (item == Items.bow)
-      {
-      f1 = 0.625F;
-      GL11.glTranslatef(0.125F, 0.0F, 0.375F);
-      GL11.glRotatef(20.0F, 0.0F, 1.0F, 0.0F);
-      GL11.glScalef(f1, -f1, f1);
-      GL11.glRotatef(-100.0F, 1.0F, 0.0F, 0.0F);
-      GL11.glRotatef(35.0F, 0.0F, 1.0F, 0.0F);
-      }
-    else if (item.isFull3D())
-      {
-      f1 = 0.625F;
+			if (this.mainModel.isChild)
+			{
+				f1 = 0.5F;
+				GL11.glTranslatef(0.0F, 0.625F, 0.0F);
+				GL11.glRotatef(-20.0F, -1.0F, 0.0F, 0.0F);
+				GL11.glScalef(f1, f1, f1);
+			}
 
-      if (item.shouldRotateAroundWhenRendering())
-        {
-        GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
-        GL11.glTranslatef(0.0F, -0.125F, 0.0F);
-        }
 
-      GL11.glTranslatef(0.125F, 0.0625f, 0.0625F);
-      GL11.glScalef(f1, -f1, f1);
-      GL11.glRotatef(-100.0F, 1.0F, 0.0F, 0.0F);
-      GL11.glRotatef(35.0F, 0.0F, 1.0F, 0.0F);
-      }
-    else
-      {
-      f1 = 0.375F;
-      GL11.glTranslatef(0.1875F, 0.0F, -0.0625F);
-      GL11.glScalef(f1, f1, f1);
-      GL11.glRotatef(60.0F, 0.0F, 0.0F, 1.0F);
-      GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
-      GL11.glRotatef(20.0F, 0.0F, 0.0F, 1.0F);
-      GL11.glRotatef(20.f, 0, 1, 0);
-      }
-    
-    float f2;
-    float f3;
-    int i;
 
-    if (itemstack.getItem().requiresMultipleRenderPasses())
-      {
-      for (i = 0; i < itemstack.getItem().getRenderPasses(itemstack.getItemDamage()); ++i)
-        {
-        int j = itemstack.getItem().getColorFromItemStack(itemstack, i);
-        f2 = (float)(j >> 16 & 255) / 255.0F;
-        f3 = (float)(j >> 8 & 255) / 255.0F;
-        float f4 = (float)(j & 255) / 255.0F;
-        GL11.glColor4f(f2, f3, f4, 1.0F);
-        this.renderManager.itemRenderer.renderItem(par1EntityLiving, itemstack, i);
-        }
-      }
-    else
-      {
-      i = itemstack.getItem().getColorFromItemStack(itemstack, 0);
-      float f5 = (float)(i >> 16 & 255) / 255.0F;
-      f2 = (float)(i >> 8 & 255) / 255.0F;
-      f3 = (float)(i & 255) / 255.0F;
-      GL11.glColor4f(f5, f2, f3, 1.0F);
-      this.renderManager.itemRenderer.renderItem(par1EntityLiving, itemstack, 0);
-      }
+			this.modelBipedMain.bipedLeftArm.postRender(0.0625F);
+			GL11.glTranslatef(0, 0.5625F, 0);//translate down to the 'hand'
 
-    GL11.glPopMatrix();
-    }
-  }
+			IItemRenderer customRenderer = MinecraftForgeClient.getItemRenderer(itemstack, EQUIPPED);
+			boolean is3D = (customRenderer != null && customRenderer.shouldUseRenderHelper(EQUIPPED, itemstack, BLOCK_3D));
 
-protected boolean func_110813_b(EntityLivingBase par1EntityLivingBase)
-  {
-  return false;
-  }
+			if (item instanceof ItemBlock && (is3D || RenderBlocks.renderItemIn3d(Block.getBlockFromItem(item).getRenderType())))
+			{
+				f1 = 0.5F;
+				GL11.glTranslatef(0.0625F, 0.0625f, -0.25F);
+				f1 *= 0.75F;
+				GL11.glRotatef(20.0F, 1.0F, 0.0F, 0.0F);
+				GL11.glRotatef(45.0F, 0.0F, 1.0F, 0.0F);
+				GL11.glScalef(-f1, -f1, f1);
+			}
+			else if (item == Items.bow)
+			{
+				f1 = 0.625F;
+				GL11.glTranslatef(0.125F, 0.0F, 0.375F);
+				GL11.glRotatef(20.0F, 0.0F, 1.0F, 0.0F);
+				GL11.glScalef(f1, -f1, f1);
+				GL11.glRotatef(-100.0F, 1.0F, 0.0F, 0.0F);
+				GL11.glRotatef(35.0F, 0.0F, 1.0F, 0.0F);
+			}
+			else if (item.isFull3D())
+			{
+				f1 = 0.625F;
 
-@Override
-protected void func_147906_a(Entity p_147906_1_, String p_147906_2_, double p_147906_3_, double p_147906_5_, double p_147906_7_, int p_147906_9_)
-  {
-  //noop to disable vanilla nameplate rendering, custom label rendering handled through custom rendering
-  }
+				if (item.shouldRotateAroundWhenRendering())
+				{
+					GL11.glRotatef(180.0F, 0.0F, 0.0F, 1.0F);
+					GL11.glTranslatef(0.0F, -0.125F, 0.0F);
+				}
 
-private String getNameForRender(NpcBase npc, boolean hostile)
-  {
-  String customName = npc.hasCustomNameTag() ? npc.getCustomNameTag() : "npc."+npc.getNpcFullType()+".name";
-  customName = StatCollector.translateToLocal(customName);  
-  boolean addHealth = (hostile && AWNPCStatics.renderHostileHealth.getBoolean()) || (!hostile && AWNPCStatics.renderFriendlyHealth.getBoolean());
-  if(addHealth)
-    {
-    customName += " "+getHealthForRender(npc);    
-    }  
-  return customName;
-  }
+				GL11.glTranslatef(0.125F, 0.0625f, 0.0625F);
+				GL11.glScalef(f1, -f1, f1);
+				GL11.glRotatef(-100.0F, 1.0F, 0.0F, 0.0F);
+				GL11.glRotatef(35.0F, 0.0F, 1.0F, 0.0F);
+				
+				if(Item.getIdFromItem(itemstack.getItem()) == 4899) {//pike
+					System.out.println("Rendering Pike");
+					f1 = 0.5F;
+					GL11.glTranslatef(0.0F, 0.625F, 0.0F);
+					GL11.glRotatef(-20.0F, -1.0F, 0.0F, -90.0F);
+					GL11.glScalef(f1, f1, f1);
+				}
+			}
+			else
+			{
+				f1 = 0.375F;
+				GL11.glTranslatef(0.1875F, 0.0F, -0.0625F);
+				GL11.glScalef(f1, f1, f1);
+				GL11.glRotatef(60.0F, 0.0F, 0.0F, 1.0F);
+				GL11.glRotatef(-90.0F, 1.0F, 0.0F, 0.0F);
+				GL11.glRotatef(20.0F, 0.0F, 0.0F, 1.0F);
+				GL11.glRotatef(20.f, 0, 1, 0);
+				
+				if(Item.getIdFromItem(itemstack.getItem()) == 4899) {//pike
+					System.out.println("Rendering Pike in else");
+					f1 = 0.5F;
+					GL11.glTranslatef(0.0F, 0.625F, 0.0F);
+					GL11.glRotatef(-20.0F, -1.0F, 0.0F, -90.0F);
+					GL11.glScalef(f1, f1, f1);
+				}
+			}
 
-private String getHealthForRender(NpcBase npc)
-  {
-  String health = String.format("%.1f", npc.getHealth());
-  return health;
-  }
+			float f2;
+			float f3;
+			int i;
 
-private void renderNpcAITasks(NpcBase entity, double x, double y, double z, int renderDistance)
-  {
-  double d3 = entity.getDistanceSqToEntity(this.renderManager.livingPlayer);
+			if (itemstack.getItem().requiresMultipleRenderPasses())
+			{
+				for (i = 0; i < itemstack.getItem().getRenderPasses(itemstack.getItemDamage()); ++i)
+				{
+					int j = itemstack.getItem().getColorFromItemStack(itemstack, i);
+					f2 = (float)(j >> 16 & 255) / 255.0F;
+					f3 = (float)(j >> 8 & 255) / 255.0F;
+					float f4 = (float)(j & 255) / 255.0F;
+					GL11.glColor4f(f2, f3, f4, 1.0F);
+					this.renderManager.itemRenderer.renderItem(par1EntityLiving, itemstack, i);
+				}
+			}
+			else
+			{
+				i = itemstack.getItem().getColorFromItemStack(itemstack, 0);
+				float f5 = (float)(i >> 16 & 255) / 255.0F;
+				f2 = (float)(i >> 8 & 255) / 255.0F;
+				f3 = (float)(i & 255) / 255.0F;
+				GL11.glColor4f(f5, f2, f3, 1.0F);
+				this.renderManager.itemRenderer.renderItem(par1EntityLiving, itemstack, 0);
+			}
 
-  if (d3 <= (double)(renderDistance * renderDistance) && this.renderManager.livingPlayer.canEntityBeSeen(entity))
-    {
-    float f = 1.6F;
-    float f1 = 0.016666668F * f;
-    GL11.glPushMatrix();
-    GL11.glTranslatef((float)x + 0.0F, (float)y + entity.height + 0.5F, (float)z);
-    GL11.glRotatef(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-    GL11.glRotatef(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-    GL11.glScalef(-f1, -f1, f1);
-    GL11.glDisable(GL11.GL_LIGHTING);
-    GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-    int tasks = entity.getAITasks();
-    int mask;    
-    String icon;
-    
-    for(int i = 0; i<NpcAI.NUMBER_OF_TASKS; i++)
-      {
-      mask = 1<<i;
-      if((tasks & mask)!=0)
-        {
-        renderTasks.add(mask);
-        }
-      }
-    
-    int offset = (renderTasks.size()*10/2);
-    int startX = -offset;
-    
-    for(int i = 0; i < renderTasks.size();i++)
-      {
-      icon = getIconFor(renderTasks.get(i));
-      renderIcon(icon, 16, 16, startX+i*20, -16);
-      }    
-    GL11.glEnable(GL11.GL_LIGHTING);
-    GL11.glPopMatrix();
-    this.renderTasks.clear();
-    }
-  }
+			GL11.glPopMatrix();
+		}
+	}
 
-private void renderColoredLabel(NpcBase entity, String string, double x, double y, double z, int renderDistance, int color1, int color2)
-  {
-  double d3 = entity.getDistanceSqToEntity(this.renderManager.livingPlayer);
+	protected boolean func_110813_b(EntityLivingBase par1EntityLivingBase)
+	{
+		return false;
+	}
 
-  if (d3 <= (double)(renderDistance * renderDistance) && this.renderManager.livingPlayer.canEntityBeSeen(entity))
-    {
-    FontRenderer fontrenderer = this.getFontRendererFromRenderManager();
-    float f = 1.6F;
-    float f1 = 0.016666668F * f;
-    GL11.glPushMatrix();
-    GL11.glTranslatef((float)x + 0.0F, (float)y + entity.height + 0.5F, (float)z);
-    GL11.glNormal3f(0.0F, 1.0F, 0.0F);
-    GL11.glRotatef(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
-    GL11.glRotatef(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
-    GL11.glScalef(-f1, -f1, f1);
-    GL11.glDisable(GL11.GL_LIGHTING);
-    GL11.glDepthMask(false);
-    GL11.glDisable(GL11.GL_DEPTH_TEST);
-    GL11.glEnable(GL11.GL_BLEND);
-    OpenGlHelper.glBlendFunc(770, 771, 1, 0);
-    Tessellator tessellator = Tessellator.instance;
+	@Override
+	protected void func_147906_a(Entity p_147906_1_, String p_147906_2_, double p_147906_3_, double p_147906_5_, double p_147906_7_, int p_147906_9_)
+	{
+		//noop to disable vanilla nameplate rendering, custom label rendering handled through custom rendering
+	}
 
-    GL11.glDisable(GL11.GL_TEXTURE_2D);
-    tessellator.startDrawingQuads();
-    int j = fontrenderer.getStringWidth(string) / 2;
-    tessellator.setColorRGBA_F(0.0F, 0.0F, 0.0F, 0.25F);
-    tessellator.addVertex((double)(-j - 1), (double)(-1 ), 0.0D);
-    tessellator.addVertex((double)(-j - 1), (double)(8), 0.0D);
-    tessellator.addVertex((double)(j + 1), (double)(8), 0.0D);
-    tessellator.addVertex((double)(j + 1), (double)(-1), 0.0D);
-    tessellator.draw();
-    GL11.glEnable(GL11.GL_TEXTURE_2D);
-    fontrenderer.drawString(string, -fontrenderer.getStringWidth(string) / 2, 0, color1);
-    GL11.glEnable(GL11.GL_DEPTH_TEST);
-    GL11.glDepthMask(true);
-    fontrenderer.drawString(string, -fontrenderer.getStringWidth(string) / 2, 0, color2);
-    GL11.glEnable(GL11.GL_LIGHTING);
-    GL11.glDisable(GL11.GL_BLEND);
-    GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-    GL11.glPopMatrix();
-    }
-  }
+	private String getNameForRender(NpcBase npc, boolean hostile)
+	{
+		String customName = npc.hasCustomNameTag() ? npc.getCustomNameTag() : "npc."+npc.getNpcFullType()+".name";
+		customName = StatCollector.translateToLocal(customName);  
+		boolean addHealth = (hostile && AWNPCStatics.renderHostileHealth.getBoolean()) || (!hostile && AWNPCStatics.renderFriendlyHealth.getBoolean());
+		if(addHealth)
+		{
+			customName += " "+getHealthForRender(npc);    
+		}  
+		return customName;
+	}
 
-@Override
-protected ResourceLocation getEntityTexture(Entity par1Entity)
-  {
-  return ((NpcBase)par1Entity).getTexture();
-  }
+	private String getHealthForRender(NpcBase npc)
+	{
+		String health = String.format("%.1f", npc.getHealth());
+		return health;
+	}
 
-private void renderIcon(String tex, int width, int height, int x, int y)
-  {
-  Tessellator tess = Tessellator.instance;
-  AWTextureManager.instance().bindLocationTexture(tex);
-  int halfW = width/2;
-  int halfH = height/2;
-  tess.startDrawingQuads();
-  tess.addVertexWithUV(x-halfW, y-halfH, 0, 0, 0); 
-  tess.addVertexWithUV(x-halfW, y+halfH, 0, 0, 1);
-  tess.addVertexWithUV(x+halfW, y+halfH, 0, 1, 1);
-  tess.addVertexWithUV(x+halfW, y+-halfH, 0, 1, 0);
-  tess.draw();
-  }
+	private void renderNpcAITasks(NpcBase entity, double x, double y, double z, int renderDistance)
+	{
+		double d3 = entity.getDistanceSqToEntity(this.renderManager.livingPlayer);
 
-private String getIconFor(int task)
-  {
-  switch(task)
-  {
-  case 0:
-  return null;
-  case NpcAI.TASK_ATTACK:
-  return "ancientwarfare:textures/entity/npc/ai/task_attack.png";
-  case NpcAI.TASK_UPKEEP:
-  return "ancientwarfare:textures/entity/npc/ai/task_upkeep.png";
-  case NpcAI.TASK_IDLE_HUNGRY:
-  return "ancientwarfare:textures/entity/npc/ai/task_upkeep2.png";
-  case NpcAI.TASK_GO_HOME:
-  return "ancientwarfare:textures/entity/npc/ai/task_home.png";
-  case NpcAI.TASK_WORK:
-  return "ancientwarfare:textures/entity/npc/ai/task_work.png";
-  case NpcAI.TASK_PATROL:
-  return "ancientwarfare:textures/entity/npc/ai/task_patrol.png";
-  case NpcAI.TASK_GUARD:
-  return "ancientwarfare:textures/entity/npc/ai/task_guard.png";
-  case NpcAI.TASK_FOLLOW:
-  return "ancientwarfare:textures/entity/npc/ai/task_follow.png";
-  case NpcAI.TASK_WANDER:
-  return "ancientwarfare:textures/entity/npc/ai/task_wander.png";
-  case NpcAI.TASK_MOVE:
-  return "ancientwarfare:textures/entity/npc/ai/task_move.png";
-  default:
-  return null;  
-  }
-  }
+		if (d3 <= (double)(renderDistance * renderDistance) && this.renderManager.livingPlayer.canEntityBeSeen(entity))
+		{
+			float f = 1.6F;
+			float f1 = 0.016666668F * f;
+			GL11.glPushMatrix();
+			GL11.glTranslatef((float)x + 0.0F, (float)y + entity.height + 0.5F, (float)z);
+			GL11.glRotatef(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+			GL11.glRotatef(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+			GL11.glScalef(-f1, -f1, f1);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+			int tasks = entity.getAITasks();
+			int mask;    
+			String icon;
+
+			for(int i = 0; i<NpcAI.NUMBER_OF_TASKS; i++)
+			{
+				mask = 1<<i;
+				if((tasks & mask)!=0)
+				{
+					renderTasks.add(mask);
+				}
+			}
+
+			int offset = (renderTasks.size()*10/2);
+			int startX = -offset;
+
+			for(int i = 0; i < renderTasks.size();i++)
+			{
+				icon = getIconFor(renderTasks.get(i));
+				renderIcon(icon, 16, 16, startX+i*20, -16);
+			}    
+			GL11.glEnable(GL11.GL_LIGHTING);
+			GL11.glPopMatrix();
+			this.renderTasks.clear();
+		}
+	}
+
+	private void renderColoredLabel(NpcBase entity, String string, double x, double y, double z, int renderDistance, int color1, int color2)
+	{
+		double d3 = entity.getDistanceSqToEntity(this.renderManager.livingPlayer);
+
+		if (d3 <= (double)(renderDistance * renderDistance) && this.renderManager.livingPlayer.canEntityBeSeen(entity))
+		{
+			FontRenderer fontrenderer = this.getFontRendererFromRenderManager();
+			float f = 1.6F;
+			float f1 = 0.016666668F * f;
+			GL11.glPushMatrix();
+			GL11.glTranslatef((float)x + 0.0F, (float)y + entity.height + 0.5F, (float)z);
+			GL11.glNormal3f(0.0F, 1.0F, 0.0F);
+			GL11.glRotatef(-this.renderManager.playerViewY, 0.0F, 1.0F, 0.0F);
+			GL11.glRotatef(this.renderManager.playerViewX, 1.0F, 0.0F, 0.0F);
+			GL11.glScalef(-f1, -f1, f1);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			GL11.glDepthMask(false);
+			GL11.glDisable(GL11.GL_DEPTH_TEST);
+			GL11.glEnable(GL11.GL_BLEND);
+			OpenGlHelper.glBlendFunc(770, 771, 1, 0);
+			Tessellator tessellator = Tessellator.instance;
+
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			tessellator.startDrawingQuads();
+			int j = fontrenderer.getStringWidth(string) / 2;
+			tessellator.setColorRGBA_F(0.0F, 0.0F, 0.0F, 0.25F);
+			tessellator.addVertex((double)(-j - 1), (double)(-1 ), 0.0D);
+			tessellator.addVertex((double)(-j - 1), (double)(8), 0.0D);
+			tessellator.addVertex((double)(j + 1), (double)(8), 0.0D);
+			tessellator.addVertex((double)(j + 1), (double)(-1), 0.0D);
+			tessellator.draw();
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			fontrenderer.drawString(string, -fontrenderer.getStringWidth(string) / 2, 0, color1);
+			GL11.glEnable(GL11.GL_DEPTH_TEST);
+			GL11.glDepthMask(true);
+			fontrenderer.drawString(string, -fontrenderer.getStringWidth(string) / 2, 0, color2);
+			GL11.glEnable(GL11.GL_LIGHTING);
+			GL11.glDisable(GL11.GL_BLEND);
+			GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+			GL11.glPopMatrix();
+		}
+	}
+
+	@Override
+	protected ResourceLocation getEntityTexture(Entity par1Entity)
+	{
+		return ((NpcBase)par1Entity).getTexture();
+	}
+
+	private void renderIcon(String tex, int width, int height, int x, int y)
+	{
+		Tessellator tess = Tessellator.instance;
+		AWTextureManager.instance().bindLocationTexture(tex);
+		int halfW = width/2;
+		int halfH = height/2;
+		tess.startDrawingQuads();
+		tess.addVertexWithUV(x-halfW, y-halfH, 0, 0, 0); 
+		tess.addVertexWithUV(x-halfW, y+halfH, 0, 0, 1);
+		tess.addVertexWithUV(x+halfW, y+halfH, 0, 1, 1);
+		tess.addVertexWithUV(x+halfW, y+-halfH, 0, 1, 0);
+		tess.draw();
+	}
+
+	private String getIconFor(int task)
+	{
+		switch(task)
+		{
+		case 0:
+			return null;
+		case NpcAI.TASK_ATTACK:
+			return "ancientwarfare:textures/entity/npc/ai/task_attack.png";
+		case NpcAI.TASK_UPKEEP:
+			return "ancientwarfare:textures/entity/npc/ai/task_upkeep.png";
+		case NpcAI.TASK_IDLE_HUNGRY:
+			return "ancientwarfare:textures/entity/npc/ai/task_upkeep2.png";
+		case NpcAI.TASK_GO_HOME:
+			return "ancientwarfare:textures/entity/npc/ai/task_home.png";
+		case NpcAI.TASK_WORK:
+			return "ancientwarfare:textures/entity/npc/ai/task_work.png";
+		case NpcAI.TASK_PATROL:
+			return "ancientwarfare:textures/entity/npc/ai/task_patrol.png";
+		case NpcAI.TASK_GUARD:
+			return "ancientwarfare:textures/entity/npc/ai/task_guard.png";
+		case NpcAI.TASK_FOLLOW:
+			return "ancientwarfare:textures/entity/npc/ai/task_follow.png";
+		case NpcAI.TASK_WANDER:
+			return "ancientwarfare:textures/entity/npc/ai/task_wander.png";
+		case NpcAI.TASK_MOVE:
+			return "ancientwarfare:textures/entity/npc/ai/task_move.png";
+		default:
+			return null;  
+		}
+	}
 
 }

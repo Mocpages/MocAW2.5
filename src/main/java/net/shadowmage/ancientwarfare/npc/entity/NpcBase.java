@@ -73,6 +73,11 @@ private String customTexRef = "";//might as well allow for player-owned as well.
 public boolean isMale;
 public boolean isChild;
 public int age;
+
+public Entity guide;
+public double xOff;
+public double zOff;
+public double angle;
 //float scaleHeight = (float) (Utilities.getNumberInRange(rand, 0.03F, 0.09F), WatcherIDsHuman.HEIGHT, dataWatcherEx);
 //float scaleGirth = (float) (Utilities.getNumberInRange(rand, -0.03F, 0.05F), WatcherIDsHuman.GIRTH, dataWatcherEx);
 

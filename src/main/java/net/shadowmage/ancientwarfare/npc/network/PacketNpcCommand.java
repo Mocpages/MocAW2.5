@@ -19,6 +19,8 @@ public class PacketNpcCommand extends PacketBase
 	CommandType type;
 	boolean blockTarget, moc;
 	int x, y, z, xp, yp, zp, x2, y2, z2;
+	double angle;
+	int ranks;
 
 	public PacketNpcCommand(CommandType type, Entity ent)
 	{
@@ -36,7 +38,7 @@ public class PacketNpcCommand extends PacketBase
 		this.z = z;
 	}
 
-	public PacketNpcCommand(CommandType type, int x, int y, int z, int x2, int y2, int z2)
+	public PacketNpcCommand(CommandType type, int x, int y, int z, double angle, int ranks)
 	{
 		this.type = type;
 		this.blockTarget = true;
@@ -44,9 +46,8 @@ public class PacketNpcCommand extends PacketBase
 		this.x = x;
 		this.y = y;
 		this.z = z;
-		this.x2 = x2;
-		this.y2 = y2;
-		this.z2 = z2;
+		this.angle = angle;
+		this.ranks = ranks;
 
 	}
 
@@ -69,9 +70,8 @@ public class PacketNpcCommand extends PacketBase
 			data.writeInt(z);
 		}
 		if(moc) {
-			data.writeInt(x2);
-			data.writeInt(y2);
-			data.writeInt(z2);
+			data.writeDouble(angle);
+			data.writeInt(ranks);
 		}
 		else
 		{
@@ -91,19 +91,16 @@ public class PacketNpcCommand extends PacketBase
 			z = data.readInt();
 		}
 		if(moc) {
-			x2 = data.readInt();
-			y2 = data.readInt();
-			z2 = data.readInt();
-			System.out.println("Reading data. X1 " + x + " Z1 " + z  + " X2 " +x2 + " Z2 " + z2);
+			angle = data.readDouble();
+			ranks = data.readInt();
 		}
 	}
 
 	@Override
 	protected void execute()
 	{
-		System.out.println("Executing. X1 " + x + " Z1 " + z  + " X2 " +x2 + " Z2 " + z2);
 
-		NpcCommand.handleServerCommand(player, type, blockTarget, x, y, z, x2, y2, z2);
+		NpcCommand.handleServerCommand(player, type, blockTarget, x, y, z, angle, ranks);
 	}
 
 }
