@@ -996,4 +996,9 @@ public double getDistanceSq(BlockPosition pos)
   {
   return getDistanceSq(pos.x+0.5d, pos.y, pos.z+0.5d);
   }
+
+public void dismountVehicle() {
+	// TODO DISMOUNT VIC
+	
+}
 }

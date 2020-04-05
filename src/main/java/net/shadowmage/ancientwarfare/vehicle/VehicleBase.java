@@ -1,4 +1,27 @@
-package net.shadowmage.ancientwarfare.vehicle.entity;
+/**
+   Copyright 2012 John Cummens (aka Shadowmage, Shadowmage4513)
+   This software is distributed under the terms of the GNU General Public License.
+   Please see COPYING for precise license information.
+
+   This file is part of Ancient Warfare.
+
+   Ancient Warfare is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Ancient Warfare is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Ancient Warfare.  If not, see <http://www.gnu.org/licenses/>.
+
+
+ */
+package shadowmage.ancient_warfare.common.vehicles;
+
 import java.util.List;
 import java.util.Random;
 
@@ -17,42 +40,39 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
-//import shadowmage.ancient_warfare.common.config.Config;
-import net.shadowmage.ancientwarfare.core.config.ConfigManager;
-import net.shadowmage.ancientwarfare.core.interfaces.IEntityContainerSynch;
-
-import net.shadowmage.ancientwarfare.core.interfaces.IMissileHitCallback;
-import net.shadowmage.ancientwarfare.core.interfaces.IPathableEntity;
-import net.shadowmage.ancientwarfare.core.inventory.VehicleInventory;
+import shadowmage.ancient_warfare.common.config.Config;
+import shadowmage.ancient_warfare.common.interfaces.IEntityContainerSynch;
+import shadowmage.ancient_warfare.common.interfaces.IMissileHitCallback;
+import shadowmage.ancient_warfare.common.interfaces.IPathableEntity;
+import shadowmage.ancient_warfare.common.inventory.VehicleInventory;
 import shadowmage.ancient_warfare.common.network.Packet02Vehicle;
+import shadowmage.ancient_warfare.common.npcs.NpcBase;
 import shadowmage.ancient_warfare.common.pathfinding.Node;
 import shadowmage.ancient_warfare.common.pathfinding.PathWorldAccess;
 import shadowmage.ancient_warfare.common.pathfinding.PathWorldAccessEntity;
 import shadowmage.ancient_warfare.common.pathfinding.navigator.Navigator;
 import shadowmage.ancient_warfare.common.registry.VehicleRegistry;
-import net.shadowmage.ancientwarfare.core.util.ByteTools;
-import net.shadowmage.ancientwarfare.core.util.InventoryTools;
-import net.shadowmage.ancientwarfare.core.util.Pos3f;
-//import net.shadowmage.ancientwarfare.core.util.ServerPerformanceMonitor;
-import net.shadowmage.ancientwarfare.core.util.Trig;
-import net.shadowmage.ancientwarfare.vehicle.VehicleVarHelpers.DummyVehicleHelper;
-import net.shadowmage.ancientwarfare.vehicle.armors.IVehicleArmorType;
-import net.shadowmage.ancientwarfare.vehicle.helpers.VehicleAmmoHelper;
-import net.shadowmage.ancientwarfare.vehicle.helpers.VehicleFiringHelper;
-import net.shadowmage.ancientwarfare.vehicle.helpers.VehicleFiringVarsHelper;
-import net.shadowmage.ancientwarfare.vehicle.helpers.VehicleMoveHelper;
-import net.shadowmage.ancientwarfare.vehicle.helpers.VehicleUpgradeHelper;
-import net.shadowmage.ancientwarfare.vehicle.materials.IVehicleMaterial;
-import net.shadowmage.ancientwarfare.vehicle.missiles.IAmmoType;
-import net.shadowmage.ancientwarfare.vehicle.types.VehicleType;
-import net.shadowmage.ancientwarfare.vehicle.upgrades.IVehicleUpgradeType;
-import net.shadowmage.ancientwarfare.npc.entity.NpcBase;
+import shadowmage.ancient_warfare.common.utils.ByteTools;
+import shadowmage.ancient_warfare.common.utils.InventoryTools;
+import shadowmage.ancient_warfare.common.utils.Pos3f;
+import shadowmage.ancient_warfare.common.utils.ServerPerformanceMonitor;
+import shadowmage.ancient_warfare.common.utils.Trig;
+import shadowmage.ancient_warfare.common.vehicles.VehicleVarHelpers.DummyVehicleHelper;
+import shadowmage.ancient_warfare.common.vehicles.armors.IVehicleArmorType;
+import shadowmage.ancient_warfare.common.vehicles.helpers.VehicleAmmoHelper;
+import shadowmage.ancient_warfare.common.vehicles.helpers.VehicleFiringHelper;
+import shadowmage.ancient_warfare.common.vehicles.helpers.VehicleFiringVarsHelper;
+import shadowmage.ancient_warfare.common.vehicles.helpers.VehicleMoveHelper;
+import shadowmage.ancient_warfare.common.vehicles.helpers.VehicleUpgradeHelper;
+import shadowmage.ancient_warfare.common.vehicles.materials.IVehicleMaterial;
+import shadowmage.ancient_warfare.common.vehicles.missiles.IAmmoType;
+import shadowmage.ancient_warfare.common.vehicles.types.VehicleType;
+import shadowmage.ancient_warfare.common.vehicles.upgrades.IVehicleUpgradeType;
 
 import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteArrayDataOutput;
 
 import cpw.mods.fml.common.registry.IEntityAdditionalSpawnData;
-import io.netty.buffer.ByteBuf;
 
 public class VehicleBase extends Entity implements IEntityAdditionalSpawnData, IMissileHitCallback, IEntityContainerSynch, IPathableEntity, IInventory
 {
@@ -1304,64 +1324,4 @@ public boolean isItemValidForSlot(int i, ItemStack itemstack)
   {
   return inventory.storageInventory.isItemValidForSlot(i, itemstack);
   }
-
-@Override
-public String getInventoryName() {
-	// TODO Auto-generated method stub
-	return null;
-}
-
-@Override
-public boolean hasCustomInventoryName() {
-	// TODO Auto-generated method stub
-	return false;
-}
-
-@Override
-public void markDirty() {
-	// TODO Auto-generated method stub
-	
-}
-
-@Override
-public void openInventory() {
-	// TODO Auto-generated method stub
-	
-}
-
-@Override
-public void closeInventory() {
-	// TODO Auto-generated method stub
-	
-}
-
-@Override
-public void writeSpawnData(ByteBuf buffer) {
-	// TODO Auto-generated method stub
-	
-}
-
-@Override
-public void readSpawnData(ByteBuf additionalData) {
-	// TODO Auto-generated method stub
-	
-}
-
-@Override
-public net.shadowmage.ancientwarfare.core.interfaces.PathWorldAccess getWorldAccess() {
-	// TODO Auto-generated method stub
-	return null;
-}
-
-@Override
-public net.shadowmage.ancientwarfare.core.interfaces.PathWorldAccess getWorldAccess() {
-	// TODO Auto-generated method stub
-	return null;
-}
-
-@Override
-public net.shadowmage.ancientwarfare.core.interfaces.PathWorldAccess getWorldAccess() {
-	// TODO Auto-generated method stub
-	return null;
-}
 }

@@ -1,5 +1,6 @@
 package net.shadowmage.ancientwarfare.core.item;
 
+import net.minecraft.block.Block;
 import net.minecraft.item.Item.ToolMaterial;
 import net.shadowmage.ancientwarfare.core.api.AWItems;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -20,7 +21,7 @@ public void load()
   
   AWItems.backpack = new ItemBackpack("backpack");
   GameRegistry.registerItem(AWItems.backpack, "backpack");
-  
+    
   AWItems.automationHammerWood = new ItemHammer("wooden_hammer", ToolMaterial.WOOD);
   GameRegistry.registerItem(AWItems.automationHammerWood, "wooden_hammer");  
   AWItems.automationHammerStone = new ItemHammer("stone_hammer", ToolMaterial.STONE);

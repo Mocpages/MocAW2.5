@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.world.World;
+import net.shadowmage.ancientwarfare.vehicle.missiles.MissileBase;
 
 public class AWEntityRegistry
 {
@@ -182,5 +183,6 @@ public String getEntityName()
   return entityName;
   }
 }
+
 
 }

@@ -93,6 +93,7 @@ public static final int GUI_NPC_FACTION_BARD = 49;
 public static final int GUI_GRANT = 50;
 public static final int GUI_CITY = 51;
 public static final int GUI_CITY_MARKET = 52;
+public static final int GUI_VEHICLE_DEBUG = 53;
 
 
 
@@ -277,4 +278,5 @@ public final void openGui(EntityPlayer player, int id, int x, int y, int z)
       }
     }
   }
+
 }
