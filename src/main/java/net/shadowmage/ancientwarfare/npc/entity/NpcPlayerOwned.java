@@ -27,6 +27,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
 import net.minecraft.command.IEntitySelector;
 import net.shadowmage.ancientwarfare.core.config.AWLog;
+import net.shadowmage.ancientwarfare.core.gamedata.WorldData;
 import net.shadowmage.ancientwarfare.core.inventory.InventoryBackpack;
 import net.shadowmage.ancientwarfare.core.inventory.InventoryBasic;
 import net.shadowmage.ancientwarfare.core.item.ItemBackpack;
@@ -75,9 +76,12 @@ public int x2 = 0;
 public int y2 = 0;
 public int cx = 0;
 public int cy = 0;
+public int moraleCap = 25;
+public int morale = 25;
 private NpcPlayerOwned spouse;
 private List<NpcPlayerOwned> suitors;
 List<NpcPlayerOwned> children;
+AxisAlignedBB bounding = AxisAlignedBB.getBoundingBox(this.posX + 50.0, this.posY + 50.0, this.posZ + 50.0, this.posX - 50.0, this.posY - 50.0, this.posZ - 50.0);
 
 private BlockPosition townHallPosition;
 private BlockPosition upkeepAutoBlock;
@@ -302,6 +306,16 @@ public void onDeath(DamageSource source)
       townHall.handleNpcDeath(this, source);
       }
     }  
+  List<NpcPlayerOwned> contacts = worldObj.getEntitiesWithinAABB(NpcPlayerOwned.class, bounding);
+  for(NpcPlayerOwned c : contacts) {
+	  if(Trig.getDistance(this.posX, this.posY, this.posZ, c.posX, c.posY, c.posZ) <= 35){
+		  if(WorldData.isAlly(this.getTeam(), c.getTeam())) {
+			  c.morale -= 3;
+		  }else if(WorldData.isEnemy(this.getTeam(), c.getTeam())) {
+			  c.morale += 1;
+		  }
+	  }
+  }
   super.onDeath(source);  
   }
 
@@ -817,9 +831,60 @@ public TileCity getCity() {
 	return null;
 }
 
+
+
+public void updateMoraleCap() {
+	moraleCap = 25;
+	List<NpcPlayerOwned> contacts = worldObj.getEntitiesWithinAABB(NpcPlayerOwned.class, bounding);
+	for(NpcPlayerOwned c : contacts) {
+		if(WorldData.isEnemy(this.getTeam(), c.getTeam())) {
+			if(Trig.getDistance(this.posX, this.posY, this.posZ, c.posX, c.posY, c.posZ) <= 15) {
+				moraleCap -= 1;
+				if(c.isRiding()) { //Cavalry have a larger morale impact
+					moraleCap -= 2;
+				}
+			}
+			
+		}else if(WorldData.isAlly(this.getTeam(), c.getTeam())) {
+			moraleCap += 1;
+		}
+	}
+	
+	List<EntityPlayer> players = worldObj.getEntitiesWithinAABB(EntityPlayer.class, bounding);
+	for(EntityPlayer p : players) {
+		if(Trig.getDistance(this.posX, this.posY, this.posZ, p.posX, p.posY, p.posZ) <= 20) {
+			if(WorldData.isEnemy(this.getTeam(), p.getTeam())){
+				moraleCap -= 5;
+			}
+			if(WorldData.isAlly(this.getTeam(), p.getTeam())){
+				moraleCap += 7;
+			}
+		}
+	}
+	
+	if(getCohesion()) {
+		moraleCap *= 1.5;
+	}
+}
+
+public boolean getCohesion() {
+	if(guide.getClass() != NpcPlayerOwned.class) {
+		return true;
+	}else if(Trig.getDistance(this.posX, this.posY, this.posZ, guide.posX, guide.posY, guide.posZ) <= 2.5){
+		return ((NpcPlayerOwned) guide).getCohesion();
+	}
+	return false;
+}
+
+int timer = 0;
+
 @Override
 public void onLivingUpdate(){  
 	super.onLivingUpdate();
+	timer += 1;
+	if(timer % 100 == 0) {
+		updateMoraleCap();
+	}
 	Command cmd = this.getCurrentCommand();
 	if(guide != null) {
 		double[] goal = NpcCommand.getRelOffset(guide.posX, guide.posZ, this.angle, this.xOff, this.zOff);
